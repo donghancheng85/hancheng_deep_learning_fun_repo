@@ -1,0 +1,15 @@
+name: hancheng-dl
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - torchaudio
+  - pytorch
+  - torchvision
+  - numpy
+  - pandas
+  - ipykernel
+  - pytest
+  - matplotlib
+  - jupyter
+prefix: /Users/hanchengdong/miniforge3/envs/hancheng-dl
