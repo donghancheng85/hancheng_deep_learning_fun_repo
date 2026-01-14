@@ -12,4 +12,7 @@ dependencies:
   - pytest
   - matplotlib
   - jupyter
+  - torchmetrics
+  - scikit-learn
+  - torchinfo
 prefix: /Users/hanchengdong/miniforge3/envs/hancheng-dl
