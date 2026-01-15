@@ -15,4 +15,6 @@ dependencies:
   - torchmetrics
   - scikit-learn
   - torchinfo
+  - ruff
+  - black
 prefix: /Users/hanchengdong/miniforge3/envs/hancheng-dl

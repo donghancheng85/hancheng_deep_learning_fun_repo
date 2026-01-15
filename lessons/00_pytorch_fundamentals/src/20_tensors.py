@@ -20,8 +20,7 @@ print(f"vector.shape is {vector.shape}")
 
 print("==================================")
 # MATRIX
-MATRIX = torch.tensor([[7, 8],
-                       [9, 10]])
+MATRIX = torch.tensor([[7, 8], [9, 10]])
 print(f"created MATRIX is \n {MATRIX}")
 print(f"MATRIX ndim is {MATRIX.ndim}")
 print(f"MATRIX[0] is {MATRIX[0]}")
@@ -29,20 +28,22 @@ print(f"MATRIX.shape is {MATRIX.shape}")
 
 print("==================================")
 # TENSOR
-TENSOR = torch.tensor([[[1, 2, 3],
-                        [4, 5, 6],
-                        [7, 8, 9]]])
+TENSOR = torch.tensor([[[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
 print(f"created TENSOR is \n {TENSOR}")
 print(f"TENSOR.ndim is {TENSOR.ndim}")
 print(f"TENSOR.shape is {TENSOR.shape}")
 
 print("==================================")
-TENSOR_1 = torch.tensor([[[1, 1, 1, 1],
-                          [1, 1, 1, 1],
-                          [2, 2, 2, 2],],
-                          [[3 ,3 ,3, 3],
-                           [3 ,2 ,3, 3],
-                           [3 ,4 ,3, 3]]])
+TENSOR_1 = torch.tensor(
+    [
+        [
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+            [2, 2, 2, 2],
+        ],
+        [[3, 3, 3, 3], [3, 2, 3, 3], [3, 4, 3, 3]],
+    ]
+)
 
 print(f"created TENSOR_1 is {TENSOR_1}")
 print(f"TENSOR_1.ndim is {TENSOR_1.ndim}")

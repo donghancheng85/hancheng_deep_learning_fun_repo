@@ -5,6 +5,7 @@ import sklearn
 import matplotlib
 import torchinfo, torchmetrics
 
+
 def main():
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     x = torch.randn(3, 3, device=device)
@@ -14,6 +15,7 @@ def main():
 
     print(f"is cuda avaliable? -- {torch.cuda.is_available()}")
     print(f"Is mps avaliable? {torch.backends.mps.is_available()}")
+
 
 if __name__ == "__main__":
     main()
