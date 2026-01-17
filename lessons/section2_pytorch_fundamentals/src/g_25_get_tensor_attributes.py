@@ -18,5 +18,3 @@ print(f"test_tensor.device = {test_tensor.device}")
 
 best_device_on_this_machine = get_best_device()
 print(f"The best device on this machie is {best_device_on_this_machine}")
-
-# add a line to test commit
