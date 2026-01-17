@@ -6,7 +6,7 @@ import matplotlib
 import torchinfo, torchmetrics
 
 
-def main():
+def test():
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     x = torch.randn(3, 3, device=device)
     print("torch:", torch.__version__)
@@ -17,5 +17,4 @@ def main():
     print(f"Is mps avaliable? {torch.backends.mps.is_available()}")
 
 
-if __name__ == "__main__":
-    main()
+
