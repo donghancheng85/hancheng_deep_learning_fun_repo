@@ -13,7 +13,9 @@ Note: To resolve three big errors with PyTorch and deep learning
 # To get the above info from a tensor
 test_tensor = torch.rand(3, 4)
 print(f"test_tensor.dtype = {test_tensor.dtype}")
-print(f"test_tensor.shape = {test_tensor.shape}") # can also use test_tensor.size(), it is a function
+print(
+    f"test_tensor.shape = {test_tensor.shape}"
+)  # can also use test_tensor.size(), it is a function
 print(f"test_tensor.device = {test_tensor.device}")
 
 best_device_on_this_machine = get_best_device()

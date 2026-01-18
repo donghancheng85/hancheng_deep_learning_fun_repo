@@ -12,7 +12,7 @@ Tensor Operations include:
 5. Matrix mutiplication
 """
 
-tensor_for_operation = torch.tensor(data=[1., 2., 3.])
+tensor_for_operation = torch.tensor(data=[1.0, 2.0, 3.0])
 print(f"tensor_for_operation = \n {tensor_for_operation}")
 
 # Addition

@@ -15,6 +15,3 @@ def test():
 
     print(f"is cuda avaliable? -- {torch.cuda.is_available()}")
     print(f"Is mps avaliable? {torch.backends.mps.is_available()}")
-
-
-

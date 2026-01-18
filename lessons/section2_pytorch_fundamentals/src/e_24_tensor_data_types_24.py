@@ -33,8 +33,12 @@ print(f"float_32_tensor data type is still {float_32_tensor.dtype}")
 
 # upper cast when mutilple different dtype tensors
 different_dtype_tensor_multiple_result = float_16_tensor_new * float_32_tensor
-print(f"different_dtype_tensor_multiple_result = {different_dtype_tensor_multiple_result}")
-print(f"different_dtype_tensor_multiple_result.dtype = {different_dtype_tensor_multiple_result.dtype}")
+print(
+    f"different_dtype_tensor_multiple_result = {different_dtype_tensor_multiple_result}"
+)
+print(
+    f"different_dtype_tensor_multiple_result.dtype = {different_dtype_tensor_multiple_result.dtype}"
+)
 
 # try int32 * float32, cast to float 32
 int_32_tensor = torch.tensor([3, 6, 9], dtype=torch.int32)
