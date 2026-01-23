@@ -8,11 +8,13 @@ Two ways of performing multiplication in Neural Networks and Deep Learning:
 2. Matirx multiplication
 """
 
+
 def sync_if_needed(t: torch.Tensor):
     if t.device.type == "cuda":
         torch.cuda.synchronize()
     elif t.device.type == "mps":
         torch.mps.synchronize()
+
 
 # Element-wist
 tensor = torch.tensor(data=(1, 2, 3), dtype=torch.float32)
@@ -22,7 +24,7 @@ print(f"= {element_wise_multiple_result}")
 
 # compare run time of manual method and torch buildin method
 # Matrix multiplication torch buildin method
-sync_if_needed(tensor) # to sync if tensor is on GPU
+sync_if_needed(tensor)  # to sync if tensor is on GPU
 start_buildin = time.perf_counter()
 matrix_multiple_result = torch.matmul(tensor, tensor)
 sync_if_needed(tensor)
