@@ -36,3 +36,23 @@ print(f"(torch buildin function) sum of tensor x is {sum_a}")
 
 sum_b = x.sum()
 print(f"(Tensor class method) sum of tensor x is {sum_b}")
+
+print("============================================")
+##### multi-dim tensors #####
+MATRIX = torch.randn(3, 4)
+print("Original Matrix =")
+print(MATRIX)
+
+max_MATRIX = MATRIX.max()
+print("max of MATRIX =")
+print(max_MATRIX)
+
+max_MATRIX_dim0 = MATRIX.max(dim=0)
+print("max of MATRIX on dim 0 =")
+print(max_MATRIX_dim0)
+
+max_MATRIX_dim1 = MATRIX.max(dim=1)
+print("max of MATRIX on dim 1 =")
+print(max_MATRIX_dim1)
+
+# max_MATRIX_dim2 = MATRIX.max(dim=2)
