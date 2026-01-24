@@ -1,5 +1,4 @@
 import torch
-from common.device import get_best_device
 
 # Manipulating Tensors (tensor operations)
 

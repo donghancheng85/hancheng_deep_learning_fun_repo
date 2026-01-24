@@ -1,6 +1,5 @@
 import torch
 import time
-from common.device import get_best_device
 
 """
 Two ways of performing multiplication in Neural Networks and Deep Learning:
