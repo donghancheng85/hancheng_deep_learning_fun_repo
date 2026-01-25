@@ -57,7 +57,7 @@ print(y_unsqueeze_dim2)
 print(f"y_unsqueeze_dim2 shape {y_unsqueeze_dim2.shape}")
 
 print("========================")
-# create a new tensor for permute (use case: image)
+# create a new tensor for permute (use case: image), the permute will share the same memory as the original tensor
 z = torch.randn(size=[3, 4, 2])
 print("Originaal tensor z:")
 print(z)
