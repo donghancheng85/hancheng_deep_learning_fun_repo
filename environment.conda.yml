@@ -1,11 +1,14 @@
 name: hancheng-dl
 channels:
+  - pytorch
+  - nvidia
   - conda-forge
 dependencies:
   - python=3.11
-  - torchaudio
+  - pytorch-cuda=12.4
   - pytorch
   - torchvision
+  - torchaudio
   - numpy
   - pandas
   - ipykernel
@@ -17,4 +20,3 @@ dependencies:
   - torchinfo
   - ruff
   - black
-prefix: /Users/hanchengdong/miniforge3/envs/hancheng-dl
