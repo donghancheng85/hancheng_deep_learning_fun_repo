@@ -1,5 +1,9 @@
 import torch
 
+"""
+This code is to test if cuda is avaiable on the machine.
+"""
+
 print("torch:", torch.__version__)
 print("cuda available:", torch.cuda.is_available())
 if torch.cuda.is_available():
@@ -8,3 +12,5 @@ if torch.cuda.is_available():
     x = torch.randn(2048, 2048, device="cuda")
     y = x @ x
     print("matmul ok, mean:", y.mean().item())
+else:
+    print("CUDA is not avaliable on this machine. Please use CPU or MPS (Apple)")
