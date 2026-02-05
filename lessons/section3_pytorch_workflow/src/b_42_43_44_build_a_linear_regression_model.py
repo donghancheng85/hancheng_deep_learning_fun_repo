@@ -51,7 +51,7 @@ print(f"y test set length {len(y_test)}")
 print(f"X shape is {X.shape}")
 
 """
-Visualize data
+Visualize data -- helpful to understand the data better
 """
 plt.figure(figsize=(8, 5))
 
@@ -78,3 +78,56 @@ plt.grid(True)
 plt.savefig(
     "lessons/section3_pytorch_workflow/src/b_train_test_split.png"
 )  # best practice is to store the figure
+
+
+# define a function
+def plot_prediction(
+    train_data=X_train,
+    train_labels=y_train,
+    test_data=X_test,
+    test_labels=y_test,
+    predictions=None,
+):
+    """
+    Function to plot the above training and test data/label
+
+    :param train_data: training data to plot
+    :param train_labels: labels to plot
+    :param test_data: test data to plot
+    :param test_labels: test labels to plot
+    :param predictions: predictions to plot, if any
+    """
+    plt.figure(figsize=(10, 7))
+
+    plt.scatter(
+        train_data.squeeze().numpy(),  # best practice to squeeze because matplotlib need 1D numpy array
+        train_labels.squeeze().numpy(),
+        color="blue",
+        label="Training data",
+    )
+    # Test data
+    plt.scatter(
+        test_data.squeeze().numpy(),
+        test_labels.squeeze().numpy(),
+        color="green",
+        label="Test data",
+    )
+
+    # prediction
+    if predictions is not None:
+        plt.scatter(
+            test_data,
+            predictions,
+            color="red",
+            label="Predictions"
+        )
+    
+    plt.legend()
+    plt.grid(True)
+
+    plt.savefig(
+    "lessons/section3_pytorch_workflow/src/b_train_test_split_plot_in_function.png"
+)  # best practice is to store the figure
+    
+# call the plot function
+plot_prediction()
