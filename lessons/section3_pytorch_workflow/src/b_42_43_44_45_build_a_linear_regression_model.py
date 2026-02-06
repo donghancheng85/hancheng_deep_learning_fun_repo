@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 
 # import matplotlib
 # matplotlib.use("TkAgg")
@@ -115,19 +116,50 @@ def plot_prediction(
 
     # prediction
     if predictions is not None:
-        plt.scatter(
-            test_data,
-            predictions,
-            color="red",
-            label="Predictions"
-        )
-    
+        plt.scatter(test_data, predictions, color="red", label="Predictions")
+
     plt.legend()
     plt.grid(True)
 
     plt.savefig(
-    "lessons/section3_pytorch_workflow/src/b_train_test_split_plot_in_function.png"
-)  # best practice is to store the figure
-    
+        "lessons/section3_pytorch_workflow/src/b_train_test_split_plot_in_function.png"
+    )  # best practice is to store the figure
+
+
 # call the plot function
 plot_prediction()
+
+
+"""
+Training process:
+1. Start with random number
+2. Look at training data and adjust the random values to better represent (or get closer to the ideal values)
+Two algorithms: 1. Gradient descent; 2. Backpropagation
+"""
+
+
+# Building the first PyTorch model, linear regression model class
+# need to import nn first
+class LinearRegressionModel(
+    nn.Module
+):  # <- almost everything in PyTorch inherhits from nn.Module
+    def __init__(self) -> None:
+        super().__init__()
+        self.weight = nn.Parameter(
+            torch.randn(
+                size=[1],
+                requires_grad=True,
+                dtype=torch.float32,
+            )
+        )
+        self.bias = nn.Parameter(
+            torch.randn(
+                size=[1],
+                requires_grad=True,
+                dtype=torch.float32,
+            )
+        )
+
+    # Forward method to defind the computation in the model
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.weight * x + self.bias
