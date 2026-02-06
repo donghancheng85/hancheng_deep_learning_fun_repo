@@ -83,11 +83,11 @@ plt.savefig(
 
 # define a function
 def plot_prediction(
-    train_data=X_train,
-    train_labels=y_train,
-    test_data=X_test,
-    test_labels=y_test,
-    predictions=None,
+    train_data: torch.Tensor = X_train,
+    train_labels: torch.Tensor = y_train,
+    test_data: torch.Tensor = X_test,
+    test_labels: torch.Tensor = y_test,
+    predictions: torch.Tensor | None = None,
 ):
     """
     Function to plot the above training and test data/label
@@ -116,7 +116,12 @@ def plot_prediction(
 
     # prediction
     if predictions is not None:
-        plt.scatter(test_data, predictions, color="red", label="Predictions")
+        plt.scatter(
+            test_data.squeeze().numpy(),
+            predictions.squeeze().numpy(),
+            color="red",
+            label="Predictions",
+        )
 
     plt.legend()
     plt.grid(True)
