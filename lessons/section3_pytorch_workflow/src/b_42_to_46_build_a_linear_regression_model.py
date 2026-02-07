@@ -150,7 +150,7 @@ class LinearRegressionModel(
 ):  # <- almost everything in PyTorch inherhits from nn.Module
     def __init__(self) -> None:
         super().__init__()
-        self.weight = nn.Parameter(
+        self.weight = nn.Parameter(  # nn.Parameter can be hard-coded value
             torch.randn(
                 size=[1],
                 requires_grad=True,
@@ -166,5 +166,16 @@ class LinearRegressionModel(
         )
 
     # Forward method to defind the computation in the model
+    # This need to be overrided, this is what the module does
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.weight * x + self.bias
+
+
+"""
+Pytorch model building essentials
+1. torch.nn --  contains all the building blocks for computational graphs (a neural network can be considered as a computational graph)
+2. torch.nn.Parameter -- what parameter our model try and learn, often a PyTroch layer from torch.nn will set these for us
+3. torch.nn.Module -- base class for all neural network module, if you subclass it, you should override the forward() method
+4. torch.optim -- where the optimizers in Pytorch live, they will help with gradient descent
+5. def forward() -- All nn.Module subclasses require you to override it, this method defines what happens in the forward computation
+"""
