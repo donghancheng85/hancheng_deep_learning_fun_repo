@@ -1,10 +1,12 @@
 import torch
+import torchmetrics
 
 """
 This code is to test if cuda is avaiable on the machine.
 """
 
 print("torch:", torch.__version__)
+print(f"torchmetrics {torchmetrics.__version__}")
 print("cuda available:", torch.cuda.is_available())
 if torch.cuda.is_available():
     print("gpu:", torch.cuda.get_device_name(0))

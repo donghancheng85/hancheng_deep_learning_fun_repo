@@ -88,6 +88,7 @@ def plot_prediction(
     test_data: torch.Tensor = X_test,
     test_labels: torch.Tensor = y_test,
     predictions: torch.Tensor | None = None,
+    fig_save_path: str = "lessons/section3_pytorch_workflow/src/b_train_test_split_plot_in_function.png",
 ):
     """
     Function to plot the above training and test data/label
@@ -126,13 +127,17 @@ def plot_prediction(
     plt.legend()
     plt.grid(True)
 
-    plt.savefig(
-        "lessons/section3_pytorch_workflow/src/b_train_test_split_plot_in_function.png"
-    )  # best practice is to store the figure
+    plt.savefig(fig_save_path)  # best practice is to store the figure
 
 
 # call the plot function
-plot_prediction()
+plot_prediction(
+    train_data=X_train,
+    train_labels=y_train,
+    test_data=X_test,
+    test_labels=y_test,
+    fig_save_path="lessons/section3_pytorch_workflow/src/b_train_test_split_plot_in_function.png",
+)
 
 
 """
@@ -178,4 +183,61 @@ Pytorch model building essentials
 3. torch.nn.Module -- base class for all neural network module, if you subclass it, you should override the forward() method
 4. torch.optim -- where the optimizers in Pytorch live, they will help with gradient descent
 5. def forward() -- All nn.Module subclasses require you to override it, this method defines what happens in the forward computation
+"""
+
+print("=============================================================")
+print("\nstart doing something for the created torch.nn.Module")
+# checking content of PyTorch model "LinearRegressionModel"
+# There is a method ".parameters()"
+
+# creating a random seed -- make sure to reproduce the value for learning
+torch.manual_seed(42)
+
+# instance of "LinearRegressionModel"
+linear_regression_model = LinearRegressionModel()
+
+# check out the parameters
+linear_regression_model_parameters = list(linear_regression_model.parameters())
+print(
+    f"The parameter in the linear_regression_model is \n {linear_regression_model_parameters}"
+)
+
+# List name parameters
+linear_regression_model_parameters_listed = linear_regression_model.state_dict()
+print(
+    f"The listed name parameter of linear_regression_model are {linear_regression_model_parameters_listed}"
+)
+
+# making prediction using torch.inference_mode(), predict "y_test" using "X_test"
+# when data go through model, it will go through the "forward()" method
+with torch.inference_mode():
+    # torch.inference_mode tells PyTorch only to the math calculation in forward(), do no remember everything (change the value of tensor, etc.)
+    # also the inference/prediction will be much faster
+    y_predictions_no_training = linear_regression_model(X_test)
+
+# visulize the y_prediction to compare with the actual data
+plot_prediction(
+    train_data=X_train,
+    train_labels=y_train,
+    test_data=X_test,
+    test_labels=y_test,
+    predictions=y_predictions_no_training,
+    fig_save_path="lessons/section3_pytorch_workflow/src/b_compare_prediction_with_actual_no_train_model_code_line_220.png",
+)
+
+"""
+* Training model:
+"Training" is to make model to move from some "random" parameters to some "known" parameters
+Or from a poor representation fo data to a better representation of data
+One way to measure how "poor/wrong" the model predictions are, using loss function
+
+Note: loss function == cost function == criterion
+
+Things we need to train the model:
+1. Loss function: A function to measure how wrong the model's prediction compare to the ideal output, the lower the better
+2. Optimizer: Takes into account the loss of a model and adjust the model's parameters to improve the loss function
+
+Specifically for Pytorch, we need:
+* A training loop
+* A testing loop
 """
