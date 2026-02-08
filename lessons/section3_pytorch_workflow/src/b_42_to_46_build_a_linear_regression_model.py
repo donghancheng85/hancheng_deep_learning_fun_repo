@@ -241,3 +241,37 @@ Specifically for Pytorch, we need:
 * A training loop
 * A testing loop
 """
+
+# In this case, we will use nn.L1Loss, which is MAE
+loss_fn_mae = nn.L1Loss()
+
+# Setup an optimizer (stochastic gradient decent)
+# In optimizer, we will often need to set two parameter
+# params - the model parameters you'd like to optimize, needs to be nn.Parameter objects
+# lr - learning rate, a hyperparameter that defines how big/small the optimizer changes the parameters with each step
+# Parameter vs hyperparameter: parameters are part of the model, will be updated during trainig; hyperparameter are set before training by software engineer/data scientist
+optimizer_sgd = torch.optim.SGD(
+    params=linear_regression_model.parameters(),
+    lr=0.01,  # lr = learning rate, possibly the most important hyperparameter you can set
+)
+
+"""
+Building a trainig loop (and a testing loop) in PyTorch
+Need in training loop:
+0. Loop through the data and do...
+1. forward pass (involoves data moving trhough our model's forward() function) to make predictions on data -- also called forward propagation
+2. Calculate the loss (compare forward pass predictions to ground truth labels)
+3. Optimizer zero grad
+4. Loss backward -- move backwards through the network to calculate the gradients of each of the parameters of our model with respect to the loos (backpropagation)
+5. Optimizer step -- use the optimizer to adjust our models's parameters to try and improve the loss (gradient descent)
+"""
+# And epoch is one loop through the data (a hyperparameter, we set by ourselves)
+epochs = 1
+
+# 0. loop through the data
+for epochs in range(epochs):
+    # set the model to training mode
+    linear_regression_model.train() # train mode set all parameters require gradients to requires_grad=True
+
+
+    linear_regression_model.eval() # after training, turn off require gradients
