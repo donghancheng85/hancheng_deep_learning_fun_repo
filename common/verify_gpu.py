@@ -1,5 +1,6 @@
 import torch
 import torchmetrics
+import torchviz
 
 """
 This code is to test if cuda is avaiable on the machine.

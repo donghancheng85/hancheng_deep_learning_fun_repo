@@ -5,6 +5,7 @@ from torch import nn
 # matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
+from torchviz import make_dot
 
 # start with step 1: data
 # data can be almost anything but in deep learning we mostly deal with tensors
@@ -268,10 +269,30 @@ Need in training loop:
 # And epoch is one loop through the data (a hyperparameter, we set by ourselves)
 epochs = 1
 
+### Training
 # 0. loop through the data
 for epochs in range(epochs):
     # set the model to training mode
-    linear_regression_model.train() # train mode set all parameters require gradients to requires_grad=True
+    linear_regression_model.train() # train mode set Sets an internal flag: model.training = True
 
+    # 1. Forward pass
+    y_prediction = linear_regression_model(X_train)
+
+    # 2. Calculate the loss
+    loss: torch.Tensor = loss_fn_mae(y_prediction, y_train) # always (prediction, targets) <-- follow this form in loss function
+
+    # 3. Optimizer zero grad
+    optimizer_sgd.zero_grad()
+
+    # 4. perform backpropagation on the loss with respect to the parameters of the model
+    loss.backward()
+
+    # 5. Step the optimizer (perform gradient decent)
+    optimizer_sgd.step() # by default how the optimizer changes will accumulate through the loop, we will need to zero them above at step 3
+
+    # Make graph
+    dot = make_dot(loss, params=dict(linear_regression_model.named_parameters()))
+    dot.format = "png"
+    dot.render("lessons/section3_pytorch_workflow/src/b_graph_linear_regression", cleanup=True)
 
     linear_regression_model.eval() # after training, turn off require gradients
