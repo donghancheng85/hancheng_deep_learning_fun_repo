@@ -266,8 +266,18 @@ Need in training loop:
 4. Loss backward -- move backwards through the network to calculate the gradients of each of the parameters of our model with respect to the loos (backpropagation)
 5. Optimizer step -- use the optimizer to adjust our models's parameters to try and improve the loss (gradient descent)
 """
+# set a random seed again for learning/reproducible
+# torch.manual_seed(42)
+print("=============================================================")
 # And epoch is one loop through the data (a hyperparameter, we set by ourselves)
-epochs = 1
+epochs = 500
+
+# List name parameters again before training
+print(
+    f"\nlinear_regression_model parameters before training are {linear_regression_model_parameters_listed}"
+)
+
+print(f"target values are: weight = {weight}, bias = {bias}")
 
 ### Training, the following code can be written in a function
 # 0. loop through the data
@@ -281,6 +291,7 @@ for epochs in range(epochs):
 
     # 2. Calculate the loss
     loss: torch.Tensor = loss_fn_mae(y_prediction, y_train) # always (prediction, targets) <-- follow this form in loss function
+    # print(f"in loop {epochs}, loss = {loss}")
 
     # 3. Optimizer zero grad
     # optimizer_sgd.zero_grad()
@@ -297,3 +308,20 @@ for epochs in range(epochs):
     # dot.render("lessons/section3_pytorch_workflow/src/b_graph_linear_regression", cleanup=True)
 
     linear_regression_model.eval() # after training, turn off require gradients
+    # print(f"in loop {epochs}, model parameter = {linear_regression_model_parameters_listed}")
+
+
+print(f"After training loop, linear regression model parameters are {linear_regression_model_parameters_listed}")
+
+with torch.inference_mode():
+    y_prediction_after_training = linear_regression_model(X_test)
+
+# plot after training loop:
+plot_prediction(
+    train_data=X_train,
+    train_labels=y_train,
+    test_data=X_test,
+    test_labels=y_test,
+    predictions=y_prediction_after_training,
+    fig_save_path="lessons/section3_pytorch_workflow/src/b_compare_prediction_with_actual_after_training_loop_code_line_320.png",
+)
