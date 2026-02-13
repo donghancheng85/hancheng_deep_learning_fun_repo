@@ -270,7 +270,7 @@ Need in training loop:
 # torch.manual_seed(42)
 print("=============================================================")
 # And epoch is one loop through the data (a hyperparameter, we set by ourselves)
-epochs = 500
+epochs = 100
 
 # List name parameters again before training
 print(
@@ -287,10 +287,10 @@ for epochs in range(epochs):
 
     optimizer_sgd.zero_grad() # zero grad better before forward pass
     # 1. Forward pass
-    y_prediction = linear_regression_model(X_train)
+    y_train_prediction = linear_regression_model(X_train)
 
     # 2. Calculate the loss
-    loss: torch.Tensor = loss_fn_mae(y_prediction, y_train) # always (prediction, targets) <-- follow this form in loss function
+    loss: torch.Tensor = loss_fn_mae(y_train_prediction, y_train) # always (prediction, targets) <-- follow this form in loss function
     # print(f"in loop {epochs}, loss = {loss}")
 
     # 3. Optimizer zero grad
@@ -307,8 +307,21 @@ for epochs in range(epochs):
     # dot.format = "png"
     # dot.render("lessons/section3_pytorch_workflow/src/b_graph_linear_regression", cleanup=True)
 
-    linear_regression_model.eval() # after training, turn off require gradients
+    ### Testing
+    linear_regression_model.eval() # turn off different settings in the model not needed for evaluation/testing (dropout/BatchNorml layers)
     # print(f"in loop {epochs}, model parameter = {linear_regression_model_parameters_listed}")
+    with torch.inference_mode(): # turuns off gradient tracking and a couple of more things behind the scenes
+        # 1. Do the forward pass
+        test_prediction = linear_regression_model(X_test)
+
+        # 2. calculate the loss
+        test_loss = loss_fn_mae(test_prediction, y_test) # (prediction, targets)
+    
+    # print out what is happening during testing
+    if epochs % 10 == 0:
+        print(f"Epoch: {epochs} | Loss: {loss} | Test loss: {test_loss}")
+        print(f"model parameters {linear_regression_model.state_dict()}")
+
 
 
 print(f"After training loop, linear regression model parameters are {linear_regression_model_parameters_listed}")
