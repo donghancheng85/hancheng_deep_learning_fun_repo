@@ -5,6 +5,7 @@ from torch import nn
 # matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
+
 # from torchviz import make_dot
 
 # start with step 1: data
@@ -270,7 +271,7 @@ Need in training loop:
 # torch.manual_seed(42)
 print("=============================================================")
 # And epoch is one loop through the data (a hyperparameter, we set by ourselves)
-epochs = 100
+epochs = 200
 
 # List name parameters again before training
 print(
@@ -279,18 +280,25 @@ print(
 
 print(f"target values are: weight = {weight}, bias = {bias}")
 
+# Track different values, for comparsion with other training approaches of the model (different hyperparameters)
+epoch_count: list[int] = []
+loss_values: list[float] = []
+test_loss_values: list[float] = []
+
 ### Training, the following code can be written in a function
 # 0. loop through the data
 for epochs in range(epochs):
     # set the model to training mode
-    linear_regression_model.train() # train mode set Sets an internal flag: model.training = True
+    linear_regression_model.train()  # train mode set Sets an internal flag: model.training = True
 
-    optimizer_sgd.zero_grad() # zero grad better before forward pass
+    optimizer_sgd.zero_grad()  # zero grad better before forward pass
     # 1. Forward pass
     y_train_prediction = linear_regression_model(X_train)
 
     # 2. Calculate the loss
-    loss: torch.Tensor = loss_fn_mae(y_train_prediction, y_train) # always (prediction, targets) <-- follow this form in loss function
+    loss: torch.Tensor = loss_fn_mae(
+        y_train_prediction, y_train
+    )  # always (prediction, targets) <-- follow this form in loss function
     # print(f"in loop {epochs}, loss = {loss}")
 
     # 3. Optimizer zero grad
@@ -300,7 +308,7 @@ for epochs in range(epochs):
     loss.backward()
 
     # 5. Step the optimizer (perform gradient decent)
-    optimizer_sgd.step() # by default how the optimizer changes will accumulate through the loop, we will need to zero them above at step 3
+    optimizer_sgd.step()  # by default how the optimizer changes will accumulate through the loop, we will need to zero them above at step 3
 
     # Make graph
     # dot = make_dot(loss, params=dict(linear_regression_model.named_parameters()))
@@ -308,23 +316,43 @@ for epochs in range(epochs):
     # dot.render("lessons/section3_pytorch_workflow/src/b_graph_linear_regression", cleanup=True)
 
     ### Testing
-    linear_regression_model.eval() # turn off different settings in the model not needed for evaluation/testing (dropout/BatchNorml layers)
+    linear_regression_model.eval()  # turn off different settings in the model not needed for evaluation/testing (dropout/BatchNorml layers)
     # print(f"in loop {epochs}, model parameter = {linear_regression_model_parameters_listed}")
-    with torch.inference_mode(): # turuns off gradient tracking and a couple of more things behind the scenes
+    with torch.inference_mode():  # turuns off gradient tracking and a couple of more things behind the scenes
         # 1. Do the forward pass
         test_prediction = linear_regression_model(X_test)
 
         # 2. calculate the loss
-        test_loss = loss_fn_mae(test_prediction, y_test) # (prediction, targets)
-    
+        test_loss: torch.Tensor = loss_fn_mae(
+            test_prediction, y_test
+        )  # (prediction, targets)
+
     # print out what is happening during testing
     if epochs % 10 == 0:
-        print(f"Epoch: {epochs} | Loss: {loss} | Test loss: {test_loss}")
+        epoch_count.append(epochs)
+        loss_values.append(
+            loss.item()
+        )  # item convert a tensor has a single value to Python value (use to_list() for tensors with more than one element)
+        test_loss_values.append(test_loss.item())
+        print(f"Epoch: {epochs} | Training Loss: {loss} | Test loss: {test_loss}")
         print(f"model parameters {linear_regression_model.state_dict()}")
 
+print(
+    f"After training loop, linear regression model parameters are {linear_regression_model_parameters_listed}"
+)
 
+# plot loss curves
+plt.figure(figsize=(10, 7))
+plt.plot(epoch_count, loss_values, label="Train loss")
+plt.plot(epoch_count, test_loss_values, label="Test loss")
+plt.xlabel("Epoch")
+plt.ylabel("L1 Loss (MAE)")
+plt.legend()
+plt.grid(True)
+plt.savefig(
+    "lessons/section3_pytorch_workflow/src/b_train_loss_and_epochs_plot_code_line_352.png"
+)
 
-print(f"After training loop, linear regression model parameters are {linear_regression_model_parameters_listed}")
 
 with torch.inference_mode():
     y_prediction_after_training = linear_regression_model(X_test)
@@ -336,5 +364,5 @@ plot_prediction(
     test_data=X_test,
     test_labels=y_test,
     predictions=y_prediction_after_training,
-    fig_save_path="lessons/section3_pytorch_workflow/src/b_compare_prediction_with_actual_after_training_loop_code_line_320.png",
+    fig_save_path="lessons/section3_pytorch_workflow/src/b_compare_prediction_with_actual_after_training_loop_code_line_361.png",
 )
