@@ -6,6 +6,8 @@ from torch import nn
 
 import matplotlib.pyplot as plt
 
+from pathlib import Path
+
 # from torchviz import make_dot
 
 # start with step 1: data
@@ -365,4 +367,53 @@ plot_prediction(
     test_labels=y_test,
     predictions=y_prediction_after_training,
     fig_save_path="lessons/section3_pytorch_workflow/src/b_compare_prediction_with_actual_after_training_loop_code_line_361.png",
+)
+
+"""
+Saving a model in PyTorch
+There are 3 main methods to save and load models in PyTorch:
+1. torch.save() - allows you to save a PyTorch object in Python's pickle format
+2. torch.load() - allows you load a saved PyTorch objectg
+3. torch.nn.Module.load_state_dict() - allows to load a model's saved state dictionary
+"""
+
+# Saving the PyTorch model
+
+# 1. Create models directory
+MODEL_PATH = Path("lessons/section3_pytorch_workflow/src/")
+MODEL_PATH.mkdir(parents=True, exist_ok=True)
+
+# 2. Create a model save path
+MODEL_NAME = "section3_b_linear_regression_model.pth"
+MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
+
+# 3. Save the model state_dict
+print(f"\n Saving model to: {MODEL_SAVE_PATH}")
+torch.save(obj=linear_regression_model.state_dict(), f=MODEL_SAVE_PATH)
+
+# Loading a PyTorch model
+# Since we saved out model's state_dict() rather than entire moedel, we will create a new instance of out model class and load the saved state_dict()
+# To load in a saved state_dict(), we have to instantiate a new instance of our model
+loaded_linear_regression_model = LinearRegressionModel()
+
+# Load the saved state_dict of linear_regression_model (this will update the new instance with updated parameters)
+loaded_linear_regression_model.load_state_dict(
+    torch.load(f=MODEL_SAVE_PATH, weights_only=True)
+)
+
+print(f"Original model parameters {linear_regression_model_parameters_listed}")
+print(f"loaded model parameters are {loaded_linear_regression_model.state_dict()}")
+
+# make some predictions using the loaded model
+loaded_linear_regression_model.eval()  # remember this eval() first, then inference_mode, best practice
+with torch.inference_mode():
+    y_prediction_loaded = loaded_linear_regression_model(X_test)
+
+plot_prediction(
+    train_data=X_train,
+    train_labels=y_train,
+    test_data=X_test,
+    test_labels=y_test,
+    predictions=y_prediction_loaded,
+    fig_save_path="lessons/section3_pytorch_workflow/src/b_compare_prediction_with_actual_after_loading_model_code_line_412.png",
 )
