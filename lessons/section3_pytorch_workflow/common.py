@@ -23,7 +23,9 @@ def plot_prediction(
     test_data: torch.Tensor,
     test_labels: torch.Tensor,
     predictions: Optional[torch.Tensor] = None,
-    fig_save_path: str | Path = "lessons/section3_pytorch_workflow/src/b_train_test_split_plot_in_function.png",
+    fig_save_path: (
+        str | Path
+    ) = "lessons/section3_pytorch_workflow/src/b_train_test_split_plot_in_function.png",
     *,
     title: str = "Train / Test Split",
     show: bool = False,

@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from pathlib import Path
 import matplotlib.pyplot as plt
 
 from common.device import get_best_device, print_device_info
@@ -22,12 +23,7 @@ end = 1
 step = 0.02
 
 # Create X and y (features and labels)
-X = torch.arange(
-    start=start,
-    end=end,
-    step=step,
-    device=device
-).unsqueeze(dim=1)
+X = torch.arange(start=start, end=end, step=step, device=device).unsqueeze(dim=1)
 
 y = weight * X + bias
 
@@ -45,8 +41,9 @@ plot_prediction(
     test_data=X_test,
     test_labels=y_test,
     fig_save_path="lessons/section3_pytorch_workflow/src/c_original_data_line_42.png",
-    title="plot original data"
+    title="plot original data",
 )
+
 
 # Building a PyTorch Linear model
 class LinearRegressionModulev1(nn.Module):
@@ -73,12 +70,16 @@ class LinearRegressionModulev1(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.weight * x + self.bias
 
+
 # Create a linear by subclassing nn.Module
 class LinearRegressionModelv2(nn.Module):
     """
     Using torch buildin layer nn.Linear to build the linear regression model
     """
-    def __init__(self,) -> None:
+
+    def __init__(
+        self,
+    ) -> None:
         super().__init__()
         # use nn.Linear() to create a linear regression parameters
         # also called: linear transform, probing layer, fully conneected layerk, dense layer
@@ -86,17 +87,19 @@ class LinearRegressionModelv2(nn.Module):
             in_features=1,
             out_features=1,
             device=device,
-        ) # in_feature and out_feature depend on the data shape we are dealing with
-    
+        )  # in_feature and out_feature depend on the data shape we are dealing with
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.linear_layer(x)
 
 
 # Set the manual seed]
-torch.manual_seed(42)
+torch.cuda.manual_seed_all(42)
 linear_regression_model_v2 = LinearRegressionModelv2()
 
-print(f"state_dict of linear_regression_model_v2 is {linear_regression_model_v2.state_dict()}")
+print(
+    f"state_dict of linear_regression_model_v2 is {linear_regression_model_v2.state_dict()}"
+)
 
 # Check the model current device
 current_device = next(linear_regression_model_v2.parameters()).device
@@ -107,7 +110,7 @@ print(f"current device of linear_regression_model_v2 is {current_device}")
 
 # Training code: Loss function, Optimizer, Training Loop, Testing Loop
 # Setup loss function
-loss_fn_mae = nn.L1Loss() # MAE
+loss_fn_mae = nn.L1Loss()  # MAE
 
 # Setup optimizer
 optimizer_sdg = torch.optim.SGD(
@@ -119,7 +122,7 @@ optimizer_sdg = torch.optim.SGD(
 torch.manual_seed(42)
 torch.cuda.manual_seed_all(42)
 
-epochs = 1000
+epochs = 450
 
 # Put data on the target device (cuda for best performance)
 # X_train = X_train.to(device=device) # no need because we already doen that in the beginning
@@ -151,6 +154,64 @@ for epoch in range(epochs):
 
     # print out
     if epoch % 10 == 0:
-        print(f"Epoch: {epoch} | Training Loss: {training_loss} | Test Loss {test_loss}")
+        print(
+            f"Epoch: {epoch} | Training Loss: {training_loss} | Test Loss {test_loss}"
+        )
 
 print(f"after training, model parameter is {linear_regression_model_v2.state_dict()}")
+
+# Making predictions of the model
+# Trun model into evluation mode
+linear_regression_model_v2.eval()
+
+# Make predictions on the test data
+with torch.inference_mode():
+    y_predict_after_training = linear_regression_model_v2(X_test)
+
+plot_prediction(
+    train_data=X_train,
+    train_labels=y_train,
+    test_data=X_test,
+    test_labels=y_test,
+    predictions=y_predict_after_training,
+    fig_save_path="lessons/section3_pytorch_workflow/src/c_prediction_after_traning_line_170.png",
+    title="plot prediction after training",
+)
+
+# Saving and loading a model
+
+# save the model
+MODEL_PATH = Path("lessons/section3_pytorch_workflow/src/")
+MODEL_PATH.mkdir(parents=True, exist_ok=True)
+
+MODEL_NAME = "section3_c_linear_regression_model_cuda.pth"
+MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
+
+print(f"\n Saving model to: {MODEL_SAVE_PATH}")
+torch.save(obj=linear_regression_model_v2.state_dict(), f=MODEL_SAVE_PATH)
+
+# load the model
+linear_regression_model_v2_loaded = LinearRegressionModelv2()
+linear_regression_model_v2_loaded.load_state_dict(
+    torch.load(f=MODEL_SAVE_PATH, map_location=device, weights_only=True)
+)
+
+linear_regression_model_v2_loaded.to(device=device)
+
+print(f"linear_regression_model_v2_loaded is on {next(linear_regression_model_v2_loaded.parameters()).device}")
+
+# use loaded model for prediction
+linear_regression_model_v2_loaded.eval()
+with torch.inference_mode():
+    y_predict_using_loaded_model = linear_regression_model_v2_loaded(X_test)
+
+# plot the loaded prediction
+plot_prediction(
+    train_data=X_train,
+    train_labels=y_train,
+    test_data=X_test,
+    test_labels=y_test,
+    predictions=y_predict_after_training,
+    fig_save_path="lessons/section3_pytorch_workflow/src/c_prediction_after_loading_line_205.png",
+    title="plot prediction after loading model",
+)
