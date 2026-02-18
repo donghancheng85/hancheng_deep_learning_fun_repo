@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 from pathlib import Path
-import matplotlib.pyplot as plt
 
 from common.device import get_best_device, print_device_info
 from lessons.section3_pytorch_workflow.common import plot_prediction
@@ -198,7 +197,9 @@ linear_regression_model_v2_loaded.load_state_dict(
 
 linear_regression_model_v2_loaded.to(device=device)
 
-print(f"linear_regression_model_v2_loaded is on {next(linear_regression_model_v2_loaded.parameters()).device}")
+print(
+    f"linear_regression_model_v2_loaded is on {next(linear_regression_model_v2_loaded.parameters()).device}"
+)
 
 # use loaded model for prediction
 linear_regression_model_v2_loaded.eval()
