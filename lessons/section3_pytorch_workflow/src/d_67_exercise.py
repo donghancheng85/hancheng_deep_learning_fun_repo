@@ -97,7 +97,7 @@ optimizer_sdg = torch.optim.SGD(
     lr=LEARNING_RATE,
 )
 
-EPOCHS = 400
+EPOCHS = 1000
 TEST_RATE = 20  # test data every TEST_RATE epochs
 
 for epoch in range(EPOCHS):
@@ -140,10 +140,67 @@ print(
 )
 print(f"target data, weight = {weight}, bias = {bias}")
 
+print("test the loss function graph")
+print(training_loss.grad_fn)
+print(training_loss.grad_fn.next_functions)
+
 """
 4. Make predictions with the trained model on the test data.
 Visualize these predictions against the original training and testing data 
 (note: you may need to make sure the predictions are not on the GPU if you want 
 to use non-CUDA-enabled libraries such as matplotlib to plot).
 """
+# Make prediction after training
+linear_regression_model_exercise.eval()
+with torch.inference_mode():
+    y_prediction_after_training = linear_regression_model_exercise(X_test)
 
+# visualize data
+plot_prediction(
+    train_data=X_train,
+    train_labels=y_train,
+    test_data=X_test,
+    test_labels=y_test,
+    predictions=y_prediction_after_training,
+    fig_save_path="lessons/section3_pytorch_workflow/src/d_prediction_after_training_line_155.png",
+    title="d - plot data after training",
+)
+
+"""
+5. Save your trained model's state_dict() to file.
+- Create a new instance of your model class you made in 2. 
+  and load in the state_dict() you just saved to it.
+- Perform predictions on your test data with the loaded model 
+  and confirm they match the original model predictions from 4.
+"""
+SAVE_FLAG = False  # a beginner way to say the best model
+SAVE_PATH = Path("lessons/section3_pytorch_workflow/src")
+SAVE_MODEL_NAME = "section3_d_linear_regression_model_exercise.pth"
+SAVE_MODEL_PATH = SAVE_PATH / SAVE_MODEL_NAME
+
+# save model
+if SAVE_FLAG:
+    torch.save(linear_regression_model_exercise.state_dict(), SAVE_MODEL_PATH)
+
+
+# load model
+linear_regression_model_exercise_loaded = LinearRegressionModelExercise()
+linear_regression_model_exercise_loaded.load_state_dict(
+    torch.load(SAVE_MODEL_PATH, map_location=device, weights_only=True)
+)
+
+# using load model to make prediction
+linear_regression_model_exercise_loaded.to(device=device)
+linear_regression_model_exercise_loaded.eval()
+with torch.inference_mode():
+    y_prediction_after_loading = linear_regression_model_exercise_loaded(X_test)
+
+plot_prediction(
+    train_data=X_train,
+    train_labels=y_train,
+    test_data=X_test,
+    test_labels=y_test,
+    predictions=y_prediction_after_loading,
+    fig_save_path="lessons/section3_pytorch_workflow/src/d_prediction_after_loading_line_194.png",
+    title="d - plot data after loading",
+)
