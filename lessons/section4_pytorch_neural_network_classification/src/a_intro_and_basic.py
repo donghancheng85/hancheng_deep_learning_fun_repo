@@ -1,11 +1,11 @@
 """
 Example code before start learning
 """
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-import numpy as np
 
 # Reproducibility
 torch.manual_seed(42)
@@ -31,6 +31,7 @@ y = torch.cat([y_class0, y_class1], dim=0)
 # Important: BCEWithLogitsLoss expects float targets
 y = y.unsqueeze(1)  # shape: (400, 1)
 
+
 # -------------------------------------------------
 # 2. Define simple neural network
 # -------------------------------------------------
@@ -38,13 +39,14 @@ class BinaryClassifier(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
-            nn.Linear(2, 16),   # 2 input features → 16 hidden units
+            nn.Linear(2, 16),  # 2 input features → 16 hidden units
             nn.ReLU(),
-            nn.Linear(16, 1)    # Output 1 logit (NOT sigmoid!)
+            nn.Linear(16, 1),  # Output 1 logit (NOT sigmoid!)
         )
 
     def forward(self, x):
-        return self.model(x)   # raw logits
+        return self.model(x)  # raw logits
+
 
 model = BinaryClassifier()
 
@@ -86,8 +88,8 @@ for epoch in range(epochs):
 model.eval()
 with torch.inference_mode():
     logits = model(X)
-    probs = torch.sigmoid(logits)      # convert logits → probabilities
-    preds = (probs > 0.5).float()      # threshold at 0.5
+    probs = torch.sigmoid(logits)  # convert logits → probabilities
+    preds = (probs > 0.5).float()  # threshold at 0.5
 
     accuracy = (preds == y).float().mean()
 
@@ -103,9 +105,7 @@ x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
 y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
 
 xx, yy = torch.meshgrid(
-    torch.linspace(x_min, x_max, 200),
-    torch.linspace(y_min, y_max, 200),
-    indexing="xy"
+    torch.linspace(x_min, x_max, 200), torch.linspace(y_min, y_max, 200), indexing="xy"
 )
 
 grid = torch.stack([xx.reshape(-1), yy.reshape(-1)], dim=1)
@@ -133,16 +133,12 @@ plt.contourf(xx_np, yy_np, Z_np, levels=50, cmap="coolwarm", alpha=0.6)
 plt.contour(xx_np, yy_np, Z_np, levels=[0.5], colors="black")
 
 # Scatter data points
-plt.scatter(
-    X_np[:, 0],
-    X_np[:, 1],
-    c=y_np,
-    cmap="coolwarm",
-    edgecolors="k"
-)
+plt.scatter(X_np[:, 0], X_np[:, 1], c=y_np, cmap="coolwarm", edgecolors="k")
 
 plt.title("Binary Classification Decision Boundary")
 plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")
 plt.colorbar(label="Predicted Probability (Class 1)")
-plt.savefig("lessons/section4_pytorch_neural_network_classification/src/a_demo_figure.png")
+plt.savefig(
+    "lessons/section4_pytorch_neural_network_classification/src/a_demo_figure.png"
+)
