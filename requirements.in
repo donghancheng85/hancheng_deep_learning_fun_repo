@@ -1,0 +1,27 @@
+# Top-level, human-maintained deps for this repo (Python 3.12)
+# CUDA PyTorch is installed separately via requirements.torch.txt
+
+# Notebooks / Jupyter
+jupyter
+jupyterlab
+ipykernel
+ipywidgets
+
+# Core scientific stack
+numpy
+scipy
+pandas
+matplotlib
+
+# ML helpers (common)
+scikit-learn
+
+# Utilities
+tqdm
+requests
+pyyaml
+
+# Dev / formatting
+black
+torchmetrics
+torchviz

@@ -8,6 +8,11 @@ Hancheng's repo for having fun in the Deep Learning world. Will update more late
 source .venv/bin/activate
 ```
 
+## Recover from broken stage (no git head, or want to re-clone repo and install the requirements)
+```bash
+./scripts/recreate_venv.sh
+```
+
 ## Development Setup (Ubuntu 24.04 + venv + NVIDIA GPU)
 
 This repo uses a per-project Python virtual environment (`.venv`) and pip.
