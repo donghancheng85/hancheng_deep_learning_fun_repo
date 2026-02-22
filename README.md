@@ -8,46 +8,9 @@ Hancheng's repo for having fun in the Deep Learning world. Will update more late
 source .venv/bin/activate
 ```
 
-## Recover from broken stage (no git head, or want to re-clone repo and install the requirements)
+## Development Setup (Ubuntu 24.04 + venv + NVIDIA GPU)
 ```bash
 ./scripts/recreate_venv.sh
-```
-
-## Development Setup (Ubuntu 24.04 + venv + NVIDIA GPU)
-
-This repo uses a per-project Python virtual environment (`.venv`) and pip.
-
-### Prereqs
-- Ubuntu 24.04
-- NVIDIA driver installed and working (`nvidia-smi` shows GPU)
-- Python 3.12 (default on Ubuntu 24.04)
-
-Install system packages:
-
-```bash
-sudo apt update
-sudo apt install -y python3-venv python3-pip git
-```
-
-### Create and activate venv
-
-```bash
-cd /path/to/hancheng_deep_learning_fun_repo
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -U pip setuptools wheel
-```
-
-### Install PyTorch (RTX 5080 / sm_120)
-
-```bash
-pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
-```
-
-### Install remaining dependencies
-
-```bash
-pip install -r requirements.txt
 ```
 
 ### Verify GPU works

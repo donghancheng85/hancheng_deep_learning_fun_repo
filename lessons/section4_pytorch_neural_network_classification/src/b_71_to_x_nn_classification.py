@@ -194,7 +194,7 @@ For this problem we are going to use nn.BCEWithLogitsLoss()
 # setup loss function and optimizer
 # nn.BCELoss() requires the inputs to have gone throught the sigmoid activation function prior to input to BCEloss
 loss_fn_bcelogits = nn.BCEWithLogitsLoss()  # with sigmoid activation built-in
-
+print(f"type of loss_fn_bcelogits is {type(loss_fn_bcelogits)}")
 optimizer_sdg = torch.optim.SGD(params=circle_model_v0_improve.parameters(), lr=0.1)
 
 
@@ -238,6 +238,75 @@ print(
     f"the probabilities after converting the logits are\n{y_prediction_probabilities_first5}"
 )
 
-# round the probabilities to binary value
+# for the prediction probability values, we need t operfomr a range-style rounding on them >=0.5 ->1
+
+# Find the predicted labels
 y_prediction_after_round_first5 = torch.round(y_prediction_probabilities_first5)
 print(f"After round, the prediction outputs are\n {y_prediction_after_round_first5}")
+
+# In full, we should use
+circle_model_v0_improve.eval()
+with torch.inference_mode():
+    # logits -> predction probabilities -> prediction labels
+    y_prediction_labels = torch.round(
+        torch.sigmoid(circle_model_v0_improve(X_test.to(device=device)))
+    )[:5]
+
+# Check for equality
+print(
+    torch.eq(y_prediction_after_round_first5, y_prediction_labels)
+)  # check if they are the same
+
+"""
+3.2 building training and testing loop
+"""
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)  # just for reproducibility
+
+epochs = 100
+# put data on target device
+X_train, y_train = X_train.to(device), y_train.to(device)
+X_test, y_test = X_test.to(device), y_test.to(device)
+
+# Build training and eval loop
+for epoch in range(epochs):
+    # Training
+    circle_model_v0_improve.train()
+
+    # 1. forward pass
+    y_logits = circle_model_v0_improve(X_train)
+    y_prediction = torch.round(
+        torch.sigmoid(y_logits)
+    )  # turn logits -> prediction probabilities -> prediction labels
+
+    # 2. calculate loss and accuracy
+    loss_train: torch.Tensor = loss_fn_bcelogits(y_logits, y_train) # nn.BCEwithLogitsLoss expetes raw logits as input
+    accuracy_train = accruacty_fn(y_true=y_train, y_predict=y_prediction)
+
+    # 3 Optimzer zero grad
+    optimizer_sdg.zero_grad()
+
+    # 4. loss backward (backpropagation)
+    loss_train.backward()
+
+    # 5. optimizer step (gradient descent)
+    optimizer_sdg.step()
+
+    # Testing
+    circle_model_v0_improve.eval()
+    with torch.inference_mode():
+        # 1. forward pass
+        y_logits_test = circle_model_v0_improve(X_test)
+        y_test_prediction = torch.round(torch.sigmoid(y_logits_test))
+
+        # 2. calculate test loss/accuracy
+        loss_test = loss_fn_bcelogits(y_logits_test, y_test)
+        accuracy_test = accruacty_fn(y_true=y_test, y_predict=y_test_prediction)
+
+        # print out what's happening
+        if epoch % 10 == 0:
+            print(
+                f"Epoch: {epoch} | "\
+                f"Training loss: {loss_train:.5f}, Training accuracy: {accuracy_train:.2f}% | "
+                f"Test loss: {loss_test:.5f}, Tesing accurady: {accuracy_test:.2f}%"
+            )
