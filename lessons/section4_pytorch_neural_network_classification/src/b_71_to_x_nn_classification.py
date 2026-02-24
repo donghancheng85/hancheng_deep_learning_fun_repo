@@ -5,6 +5,10 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 from numpy import ndarray
 import matplotlib.pyplot as plt
+import requests
+from pathlib import Path
+from common.helper_fucntion import plot_decision_boundary
+from lessons.section3_pytorch_workflow.common import plot_prediction
 
 from common.device import get_best_device, print_device_info
 
@@ -310,3 +314,30 @@ for epoch in range(epochs):
                 f"Training loss: {loss_train:.5f}, Training accuracy: {accuracy_train:.2f}% | "
                 f"Test loss: {loss_test:.5f}, Tesing accurady: {accuracy_test:.2f}%"
             )
+
+
+# above training results will be bad
+
+"""
+4. Make predictions and evaluate the model
+The model is not "learning". To inspect, we are going to make some predictions and make them visual
+To do so, we are going to import a function called "plot_decision_boundary()"
+"""
+# Download helper functions from Learn PyTorch repo
+if Path("common/helper_functions.py").is_file():
+    print("helper_functions.py already exists, skipping download")
+else:
+    print("Download helper_function.py")
+    request = requests.get("https://raw.githubusercontent.com/mrdbourke/pytorch-deep-learning/refs/heads/main/helper_functions.py")
+    with open("common/helper_fucntion.py", "wb") as file:
+        file.write(request.content)
+
+# plot decision boundary of model
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.title("Train")
+plot_decision_boundary(circle_model_v0_improve, X_train, y_train)
+plt.subplot(1, 2, 2)
+plt.title("Test")
+plot_decision_boundary(circle_model_v0_improve, X_test, y_test)
+plt.savefig("lessons/section4_pytorch_neural_network_classification/src/b_compare_linear_layer_train_and_test.png")
