@@ -327,10 +327,11 @@ To do so, we are going to import a function called "plot_decision_boundary()"
 if Path("common/helper_functions.py").is_file():
     print("helper_functions.py already exists, skipping download")
 else:
-    print("Download helper_function.py")
-    request = requests.get("https://raw.githubusercontent.com/mrdbourke/pytorch-deep-learning/refs/heads/main/helper_functions.py")
-    with open("common/helper_fucntion.py", "wb") as file:
-        file.write(request.content)
+    pass
+    # print("Download helper_function.py")
+    # request = requests.get("https://raw.githubusercontent.com/mrdbourke/pytorch-deep-learning/refs/heads/main/helper_functions.py")
+    # with open("common/helper_fucntion.py", "wb") as file:
+    #     file.write(request.content)
 
 # plot decision boundary of model
 plt.figure(figsize=(12, 6))
@@ -340,4 +341,35 @@ plot_decision_boundary(circle_model_v0_improve, X_train, y_train)
 plt.subplot(1, 2, 2)
 plt.title("Test")
 plot_decision_boundary(circle_model_v0_improve, X_test, y_test)
-plt.savefig("lessons/section4_pytorch_neural_network_classification/src/b_compare_linear_layer_train_and_test.png")
+# plt.savefig("lessons/section4_pytorch_neural_network_classification/src/b_compare_linear_layer_train_and_test.png")
+
+
+"""
+5. improve the model (from a model perspective)
+* add more layers - give model more chances to learn about patterns in data
+* add more hidden units - go from 5 hidden units to 10 hidden units (for example in this code)
+* Fit for longer (more epochs)
+* Changing the activation function (add the activation function into other layers other than output layer)
+* Change the learning rate
+* Change the loss functions
+
+These options are all from a model's perspective because they deal directly with the model, rather than the data.
+Because the options are all values we can change, they are refer to as "hyperparameters"
+"""
+# try improve the model by
+# - adding hidden unit 5 -> 10
+# - increase the number of layers 2 -> 3
+# - increase number of epochs 100 -> 1000
+class CircleModuleV1(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.layer_1 = nn.Linear(in_features=2, out_features=10)
+        self.layer_2 = nn.Linear(in_features=10, out_features=10)
+        self.layer_3 = nn.Linear(in_features=10, out_features=1)
+    
+    def forward(self, x):
+        return self.layer_3(self.layer_2(self.layer_1(x)))
+
+circle_model_v1 = CircleModuleV1().to(device=device)
+print(circle_model_v1)
+print(next(circle_model_v1.parameters()).device)
