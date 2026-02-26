@@ -284,7 +284,9 @@ for epoch in range(epochs):
     )  # turn logits -> prediction probabilities -> prediction labels
 
     # 2. calculate loss and accuracy
-    loss_train: torch.Tensor = loss_fn_bcelogits(y_logits, y_train) # nn.BCEwithLogitsLoss expetes raw logits as input
+    loss_train: torch.Tensor = loss_fn_bcelogits(
+        y_logits, y_train
+    )  # nn.BCEwithLogitsLoss expetes raw logits as input
     accuracy_train = accruacty_fn(y_true=y_train, y_predict=y_prediction)
 
     # 3 Optimzer zero grad
@@ -310,7 +312,7 @@ for epoch in range(epochs):
         # print out what's happening
         if epoch % 10 == 0:
             print(
-                f"Epoch: {epoch} | "\
+                f"Epoch: {epoch} | "
                 f"Training loss: {loss_train:.5f}, Training accuracy: {accuracy_train:.2f}% | "
                 f"Test loss: {loss_test:.5f}, Tesing accurady: {accuracy_test:.2f}%"
             )
@@ -356,6 +358,10 @@ plot_decision_boundary(circle_model_v0_improve, X_test, y_test)
 These options are all from a model's perspective because they deal directly with the model, rather than the data.
 Because the options are all values we can change, they are refer to as "hyperparameters"
 """
+
+print("==========================================")
+
+
 # try improve the model by
 # - adding hidden unit 5 -> 10
 # - increase the number of layers 2 -> 3
@@ -366,10 +372,68 @@ class CircleModuleV1(nn.Module):
         self.layer_1 = nn.Linear(in_features=2, out_features=10)
         self.layer_2 = nn.Linear(in_features=10, out_features=10)
         self.layer_3 = nn.Linear(in_features=10, out_features=1)
-    
+
     def forward(self, x):
         return self.layer_3(self.layer_2(self.layer_1(x)))
 
+
 circle_model_v1 = CircleModuleV1().to(device=device)
-print(circle_model_v1)
-print(next(circle_model_v1.parameters()).device)
+
+# create a loss function for this
+loss_fn_bcelogits_v1 = nn.BCEWithLogitsLoss()
+
+# optimizer
+optimizer_sdg_v1 = torch.optim.SGD(params=circle_model_v1.parameters(), lr=0.1)
+
+# Manual seeds
+torch.manual_seed(42)
+torch.cuda.manual_seed_all(42)
+
+epochs = 1000
+
+# Put data on target device
+X_train, y_train = X_train.to(device), y_train.to(device)
+X_test, y_test = X_test.to(device), y_test.to(device)
+
+# Training loop
+for epoch in range(epochs):
+    # Training
+    circle_model_v1.train()
+
+    y_logits_v1 = circle_model_v1(X_train)
+    y_prediction_v1 = torch.round(torch.sigmoid(y_logits_v1))
+
+    loss_train_v1: torch.Tensor = loss_fn_bcelogits_v1(y_logits_v1, y_train)
+    accuracy_train_v1 = accruacty_fn(y_true=y_train, y_predict=y_prediction_v1)
+
+    optimizer_sdg_v1.zero_grad()
+
+    loss_train_v1.backward()
+
+    optimizer_sdg_v1.step()
+
+    # Testing
+    circle_model_v1.eval()
+    with torch.inference_mode():
+        y_logits_test_v1 = circle_model_v1(X_test)
+        y_prediction_test_v1 = torch.round(torch.sigmoid(y_logits_test_v1))
+
+        loss_test_v1 = loss_fn_bcelogits_v1(y_logits_test_v1, y_test)
+        accuracy_test_v1 = accruacty_fn(y_true=y_test, y_predict=y_prediction_test_v1)
+
+        if epoch % 100 == 0:
+            print(
+                f"Epoch: {epoch} | "
+                f"Training loss: {loss_train_v1:.5f}, Training accuracy: {accuracy_train_v1:.2f}% | "
+                f"Test loss: {loss_test_v1:.5f}, Tesing accurady: {accuracy_test_v1:.2f}%"
+            )
+
+# Plot decision boundary again
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.title("Train")
+plot_decision_boundary(circle_model_v1, X_train, y_train)
+plt.subplot(1, 2, 2)
+plt.title("Test")
+plot_decision_boundary(circle_model_v1, X_test, y_test)
+# plt.savefig("lessons/section4_pytorch_neural_network_classification/src/b_add_more_linear_layer_and_check_prediction.png")
