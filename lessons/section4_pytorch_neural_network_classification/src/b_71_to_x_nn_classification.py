@@ -437,3 +437,99 @@ plt.subplot(1, 2, 2)
 plt.title("Test")
 plot_decision_boundary(circle_model_v1, X_test, y_test)
 # plt.savefig("lessons/section4_pytorch_neural_network_classification/src/b_add_more_linear_layer_and_check_prediction.png")
+
+"""
+5.1 Preparing data to see the model can fit a straight line
+One way to troubleshoot a larger problem is to test a smaller problem
+"""
+print("======================================================\n")
+# Create some data (straight line, a smaller problem to test if the model can learn something)
+weight = 0.7
+bias = 0.3
+start = 0
+end = 1
+step = 0.01
+X_regression = torch.arange(start, end, step).unsqueeze(dim=1)  # a matrix
+y_regression = weight * X_regression + bias
+
+# split train/test
+train_split = int(0.8 * len(X_regression))  # 80% of X will be training
+X_train_regression, y_train_regression = X_regression[:train_split], y_regression[:train_split]
+X_test_regression, y_test_regression = X_regression[train_split:], y_regression[train_split:]
+print(f"len of X_train_regression {len(X_train_regression)} | X_test_regression {len(X_test_regression)}")
+
+plot_prediction(
+    train_data=X_train_regression,
+    train_labels=y_train_regression,
+    test_data=X_test_regression,
+    test_labels=y_test_regression,
+    fig_save_path="lessons/section4_pytorch_neural_network_classification/src/b_smaller_problem_linear_data_origin.png",
+    title="plot 'smaller problem' before training",
+)
+
+"""
+5.2 Adjusting circle_model_v1 to fit a straight line
+"""
+# Same architect as circle_model_v1 using nn.Sequential()
+similar_structure_model = nn.Sequential(
+    nn.Linear(in_features=1, out_features=10),
+    nn.Linear(in_features=10, out_features=10),
+    nn.Linear(in_features=10, out_features=1),
+).to(device=device)
+
+# Loss and optimizer
+loss_fn_l1 = nn.L1Loss()
+optimizer_sdg_regression = torch.optim.SGD(
+    params=similar_structure_model.parameters(),
+    lr=0.01,
+)
+
+# Train the model
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
+
+# Epochs
+epochs = 2000
+
+# Put the data on target
+X_train_regression, y_train_regression = X_train_regression.to(device), y_train_regression.to(device)
+X_test_regression, y_test_regression = X_test_regression.to(device), y_test_regression.to(device)
+
+# Training
+for epoch in range(epochs):
+    similar_structure_model.train()
+
+    y_prediction_train_regression = similar_structure_model(X_train_regression)
+    loss_train_regression: torch.Tensor = loss_fn_l1(y_prediction_train_regression, y_train_regression)
+    optimizer_sdg_regression.zero_grad()
+    loss_train_regression.backward()
+    optimizer_sdg_regression.step()
+
+    # testing
+    similar_structure_model.eval()
+    with torch.inference_mode():
+        y_prediction_test_regression = similar_structure_model(y_test_regression)
+        loss_test_regression: torch.Tensor = loss_fn_l1(y_prediction_test_regression, y_test_regression)
+    
+    # Printing out
+    if epoch % 100 == 0:
+        print(
+                f"Epoch: {epoch} | "
+                f"Training loss: {loss_train_regression:.5f} | "
+                f"Test loss: {loss_test_regression:.5f}"
+            )
+
+# Plot the data after training
+similar_structure_model.eval()
+with torch.inference_mode():
+    y_prediction_after_training_regression = similar_structure_model(y_test_regression)
+
+plot_prediction(
+    train_data=X_train_regression,
+    train_labels=y_train_regression,
+    test_data=X_test_regression,
+    test_labels=y_test_regression,
+    predictions=y_prediction_after_training_regression,
+    fig_save_path="lessons/section4_pytorch_neural_network_classification/src/b_smaller_problem_linear_data_after_training.png",
+    title="lot 'smaller problem' after training",
+)
