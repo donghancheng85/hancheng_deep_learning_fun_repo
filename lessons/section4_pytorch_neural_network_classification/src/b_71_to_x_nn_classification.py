@@ -454,9 +454,17 @@ y_regression = weight * X_regression + bias
 
 # split train/test
 train_split = int(0.8 * len(X_regression))  # 80% of X will be training
-X_train_regression, y_train_regression = X_regression[:train_split], y_regression[:train_split]
-X_test_regression, y_test_regression = X_regression[train_split:], y_regression[train_split:]
-print(f"len of X_train_regression {len(X_train_regression)} | X_test_regression {len(X_test_regression)}")
+X_train_regression, y_train_regression = (
+    X_regression[:train_split],
+    y_regression[:train_split],
+)
+X_test_regression, y_test_regression = (
+    X_regression[train_split:],
+    y_regression[train_split:],
+)
+print(
+    f"len of X_train_regression {len(X_train_regression)} | X_test_regression {len(X_test_regression)}"
+)
 
 plot_prediction(
     train_data=X_train_regression,
@@ -489,18 +497,24 @@ torch.manual_seed(42)
 torch.cuda.manual_seed(42)
 
 # Epochs
-epochs = 2000
+epochs = 500
 
 # Put the data on target
-X_train_regression, y_train_regression = X_train_regression.to(device), y_train_regression.to(device)
-X_test_regression, y_test_regression = X_test_regression.to(device), y_test_regression.to(device)
+X_train_regression, y_train_regression = X_train_regression.to(
+    device
+), y_train_regression.to(device)
+X_test_regression, y_test_regression = X_test_regression.to(
+    device
+), y_test_regression.to(device)
 
 # Training
 for epoch in range(epochs):
+    # training
     similar_structure_model.train()
-
     y_prediction_train_regression = similar_structure_model(X_train_regression)
-    loss_train_regression: torch.Tensor = loss_fn_l1(y_prediction_train_regression, y_train_regression)
+    loss_train_regression: torch.Tensor = loss_fn_l1(
+        y_prediction_train_regression, y_train_regression
+    )
     optimizer_sdg_regression.zero_grad()
     loss_train_regression.backward()
     optimizer_sdg_regression.step()
@@ -509,15 +523,17 @@ for epoch in range(epochs):
     similar_structure_model.eval()
     with torch.inference_mode():
         y_prediction_test_regression = similar_structure_model(y_test_regression)
-        loss_test_regression: torch.Tensor = loss_fn_l1(y_prediction_test_regression, y_test_regression)
-    
+        loss_test_regression: torch.Tensor = loss_fn_l1(
+            y_prediction_test_regression, y_test_regression
+        )
+
     # Printing out
     if epoch % 100 == 0:
         print(
-                f"Epoch: {epoch} | "
-                f"Training loss: {loss_train_regression:.5f} | "
-                f"Test loss: {loss_test_regression:.5f}"
-            )
+            f"Epoch: {epoch} | "
+            f"Training loss: {loss_train_regression:.5f} | "
+            f"Test loss: {loss_test_regression:.5f}"
+        )
 
 # Plot the data after training
 similar_structure_model.eval()
@@ -531,5 +547,42 @@ plot_prediction(
     test_labels=y_test_regression,
     predictions=y_prediction_after_training_regression,
     fig_save_path="lessons/section4_pytorch_neural_network_classification/src/b_smaller_problem_linear_data_after_training.png",
-    title="lot 'smaller problem' after training",
+    title="plot 'smaller problem' after training",
 )
+
+"""
+6. The missing piece of model here: non-linearity
+* What patterns could be drawn if there is an infinite amount of a straight and non-straight lines?
+In machine learning terms: an infinite (very large number, but finite of course) of linear and non-linear functions.
+"""
+
+"""
+6.1 Recreating non-linear data (red and blue circles)
+"""
+
+# Make and plot data
+n_samples = 1000
+
+X, y = make_circles(
+    n_samples=n_samples,
+    noise=0.03,
+    random_state=42,
+)
+
+plt.figure(figsize=(12, 10))
+plt.scatter(X[:, 0], X[:, 1], c=y, cmap="RdYlBu")
+plt.savefig(
+    "lessons/section4_pytorch_neural_network_classification/src/b_another_cicle_line_574.png"
+)
+
+# Convert data to tensors then to train and test split
+X = (
+    torch.from_numpy(X).type(torch.float32).to(device)
+)  # need torch.float32 because numpy default type is float 64
+y = torch.from_numpy(y).type(torch.float32).to(device)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+print(X_train[:5])
+print(y_train[:5])
