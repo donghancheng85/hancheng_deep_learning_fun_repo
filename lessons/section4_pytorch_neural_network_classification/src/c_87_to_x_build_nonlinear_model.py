@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import requests
 from pathlib import Path
 from common.helper_fucntion import plot_decision_boundary, accuracy_fn
-from lessons.section3_pytorch_workflow.common import plot_prediction
-
 from common.device import get_best_device, print_device_info
 
 # Make device agnostic code
