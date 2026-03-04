@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import requests
 from pathlib import Path
 from common.helper_fucntion import plot_decision_boundary, accuracy_fn
-from common.helper_fucntion import plot_decision_boundary, accuracy_fn
 from common.device import get_best_device, print_device_info
 
 device = get_best_device()
@@ -38,7 +37,7 @@ X_blob, y_blob = make_blobs(
 
 # 2. turn data into tensors
 X_blob = torch.from_numpy(X_blob).type(torch.float32).to(device)
-y_blob = torch.from_numpy(y_blob).type(torch.float32).to(device).unsqueeze(dim=1)
+y_blob = torch.from_numpy(y_blob).type(torch.float32).to(device)
 
 # 3. Split into and training and test
 X_blob_train, X_blob_test, y_blob_train, y_blob_test = train_test_split(
@@ -90,4 +89,39 @@ blob_model = BlobModel(
     input_features=NUM_FEATURES, out_features=NUM_CLASS, hidden_units=8
 ).to(device)
 
-print(blob_model.state_dict())
+"""
+8.3 Create a loss function and optimizer for multi-class classification model
+"""
+# Loss function
+loss_fn_crossentropy = nn.CrossEntropyLoss()
+
+# Optimizer
+optimizer_sdg = torch.optim.SGD(params=blob_model.parameters(), lr=0.1)
+
+
+"""
+8.4 Getting prediction probabilities for a multi-class PyTorch model
+
+In order to evaluate and train and test our model, we need to convert our model's outpu (logits)
+to prediction probabilities, then to prediction lables
+Logits (raw output of the model) -> prediction probability (use torch.softmax) ->  labels (take the argma of the prediction probabilities)
+"""
+# Let's the logits of the model
+blob_model.eval()
+with torch.inference_mode():
+    y_logits_before_training: torch.Tensor = blob_model(X_blob_test)
+
+print(f"Shape of logits_before_training is {y_logits_before_training.shape}")
+
+# Conver out model's logts to prediction probabilities
+# softmax dim=1 means on dim 1, which represent the class probability sum (row) will be 1
+y_prediction_probability_before_training = torch.softmax(y_logits_before_training, dim=1)
+print(y_prediction_probability_before_training[:5])
+
+# Conver model prediction probabilities to prediction labels
+y_prediction_labels_before_training = torch.argmax(torch.softmax(y_logits_before_training, dim=1), dim=1)
+print(f"y_prediction_labels_before_training shape is {y_prediction_labels_before_training.shape}")
+
+"""
+8.5 Create a training loop and testing loop for multi-class classification
+"""
