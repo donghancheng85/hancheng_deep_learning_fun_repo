@@ -1,4 +1,5 @@
 import torch
+from torchmetrics import Accuracy
 from torch import nn
 from sklearn.datasets import make_blobs
 from sklearn.model_selection import train_test_split
@@ -180,3 +181,44 @@ for epoch in range(epochs):
                 f"Training loss: {loss_train:.5f}, Training accuracy: {accuracy_train:.2f}% | "
                 f"Test loss: {loss_test:.5f}, Tesing accuracy: {accuracy_test:.2f}%"
             )
+
+"""
+8.6 Making and evaluating predictions with Pytorch multi-class model
+"""
+# Make predictions
+blob_model.eval()
+with torch.inference_mode():
+    y_logits_after_training = blob_model(X_blob_test)
+    y_predict_label_after_training = torch.softmax(
+        y_logits_after_training, dim=1
+    ).argmax(dim=1)
+
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.title("Training Data")
+plot_decision_boundary(model=blob_model, X=X_blob_train, y=y_blob_train)
+plt.subplot(1, 2, 2)
+plt.title("Testing Data")
+plot_decision_boundary(model=blob_model, X=X_blob_test, y=y_blob_test)
+plt.savefig(
+    "lessons/section4_pytorch_neural_network_classification/src/e_line_200_multi_class_classification_results.png"
+)
+
+
+"""
+9. A few classification metrics (to evaluate our classification model)
+
+- Accuracy
+- Precision
+- Recall
+- F1 - Score
+- Confusion matrix
+- Classification report
+"""
+
+# Set up metric
+torchmetric_accruacy = Accuracy(task="multiclass", num_classes=NUM_CLASS).to(device)
+
+# Calculate accruacy
+torchmetric_accruacy_calculated = torchmetric_accruacy(y_predict_label_after_training, y_blob_test)
+print(f"Model accuracy is {torchmetric_accruacy_calculated}")
