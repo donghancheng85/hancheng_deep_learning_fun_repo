@@ -78,6 +78,8 @@ class BlobModel(nn.Module):
             nn.ReLU(),
             nn.Linear(in_features=hidden_units, out_features=hidden_units),
             nn.ReLU(),
+            nn.Linear(in_features=hidden_units, out_features=hidden_units),
+            nn.ReLU(),
             nn.Linear(in_features=hidden_units, out_features=out_features),
         )
 
@@ -220,5 +222,7 @@ plt.savefig(
 torchmetric_accruacy = Accuracy(task="multiclass", num_classes=NUM_CLASS).to(device)
 
 # Calculate accruacy
-torchmetric_accruacy_calculated = torchmetric_accruacy(y_predict_label_after_training, y_blob_test)
+torchmetric_accruacy_calculated = torchmetric_accruacy(
+    y_predict_label_after_training, y_blob_test
+)
 print(f"Model accuracy is {torchmetric_accruacy_calculated}")
