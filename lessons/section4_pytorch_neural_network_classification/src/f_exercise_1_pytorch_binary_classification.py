@@ -101,7 +101,7 @@ accuracy_calculator = Accuracy(task="binary").to(device)
 - Train the model for long enough for it to reach over 96% accuracy.
 - The training loop should output progress every 10 epochs of the model's training and test set loss and accuracy.
 """
-# Set the training
+# Set the training Constant
 epochs: int = EPOCHS
 epoch_96_accuracy: int = 0
 epoch_96_accuracy_set_flag: bool = False
