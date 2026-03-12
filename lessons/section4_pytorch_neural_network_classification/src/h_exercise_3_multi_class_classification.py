@@ -91,9 +91,7 @@ class SpiralDataModel(nn.Module):
 
 
 base_model = SpiralDataModel(
-    in_features=IN_FEATURES,
-    out_features=OUT_FEATURES,
-    hidden_units=HIDDEN_UNITS
+    in_features=IN_FEATURES, out_features=OUT_FEATURES, hidden_units=HIDDEN_UNITS
 )
 base_model = base_model.to(device)
 
@@ -103,10 +101,7 @@ spiral_model = spiral_model.to(device)
 
 # loss function and optimizer
 loss_fn_crossentropy = nn.CrossEntropyLoss()
-optimizer_adam = torch.optim.Adam(
-    params=spiral_model.parameters(),
-    lr=LEARNING_RATE
-)
+optimizer_adam = torch.optim.Adam(params=spiral_model.parameters(), lr=LEARNING_RATE)
 
 # Metric functions
 accuracy_calculator = torchmetrics.Accuracy(task="multiclass", num_classes=K).to(device)
@@ -125,12 +120,12 @@ for epoch in range(epochs):
 
     # Loss and accuracy
     loss_train: torch.Tensor = loss_fn_crossentropy(y_logits_train, y_train)
-    accuracy_calculator.reset() # Need to reset accuracy_calculator because it is stateful
+    accuracy_calculator.reset()  # Need to reset accuracy_calculator because it is stateful
     accuracy_train = accuracy_calculator(y_logits_train, y_train)
     if accuracy_train.item() > 0.95 and not epoch_95_accuracy_set_flag:
         epoch_95_accuracy_set_flag = True
         epoch_95_accuracy = epoch
-    
+
     # Optimizer zero grad
     optimizer_adam.zero_grad()
 
@@ -150,7 +145,7 @@ for epoch in range(epochs):
         loss_test: torch.Tensor = loss_fn_crossentropy(y_logits_test, y_test)
         accuracy_calculator.reset()
         accuracy_test = accuracy_calculator(y_logits_test, y_test)
-    
+
     # Print every 100 epochs
     if epoch % 10 == 0:
         print(
@@ -161,18 +156,20 @@ for epoch in range(epochs):
 
 print(f"At epoch {epoch_95_accuracy}, ADAM model reaches 95% accuracy")
 
-#=============================================================================
+# =============================================================================
 # Using sgd optimizer
 spiral_model_sgd = copy.deepcopy(base_model)
 spiral_model_sgd = spiral_model_sgd.to(device)
 optimizer_sgd = torch.optim.SGD(
     params=spiral_model_sgd.parameters(),
     lr=LEARNING_RATE_sgd,  # Learning rate
-    momentum=0.9  # Momentum helps SGD converge better on complex problems
+    momentum=0.9,  # Momentum helps SGD converge better on complex problems
 )
 
 # Create fresh metric objects for SGD training (to avoid state accumulation from Adam training)
-accuracy_calculator_sgd = torchmetrics.Accuracy(task="multiclass", num_classes=K).to(device)
+accuracy_calculator_sgd = torchmetrics.Accuracy(task="multiclass", num_classes=K).to(
+    device
+)
 
 epoch_95_accuracy_sgd: int = 0
 epoch_95_accuracy_set_flag_sgd: bool = False
@@ -189,7 +186,7 @@ for epoch in range(EPOCHS_sgd):
     if accuracy_train_sgd.item() > 0.95 and not epoch_95_accuracy_set_flag_sgd:
         epoch_95_accuracy_set_flag_sgd = True
         epoch_95_accuracy_sgd = epoch
-    
+
     # Optimizer zero grad
     optimizer_sgd.zero_grad()
 
@@ -209,7 +206,7 @@ for epoch in range(EPOCHS_sgd):
         loss_test_sgd: torch.Tensor = loss_fn_crossentropy(y_logits_test_sgd, y_test)
         accuracy_calculator_sgd.reset()
         accuracy_test_sgd = accuracy_calculator_sgd(y_logits_test_sgd, y_test)
-    
+
     # Print every 100 epochs
     if epoch % 10 == 0:
         print(
@@ -225,7 +222,9 @@ print(f"At epoch {epoch_95_accuracy_sgd}, sgd model reaches 95% accuracy")
 plt.figure(figsize=(12, 12))
 plt.subplot(2, 2, 1)
 plt.title("Adam optimizer Training Data")
-plot_decision_boundary(model=spiral_model, X=X_train, y=y_train) # this will move model to cpu
+plot_decision_boundary(
+    model=spiral_model, X=X_train, y=y_train
+)  # this will move model to cpu
 plt.grid()
 plt.subplot(2, 2, 2)
 plt.title("Adam optimizer Testing Data")
@@ -242,6 +241,7 @@ plt.grid()
 plt.savefig(
     "lessons/section4_pytorch_neural_network_classification/src/h_line_243_multiclass_prediction_boundary_adam_and_sgd.png"
 )
+
 
 # Deine a metrics function:
 def evaluate_multiclass_model(
@@ -313,6 +313,7 @@ def evaluate_multiclass_model(
         "f1": f1,
         "confusion_matrix": confusion_matrix,
     }
+
 
 # Calculate the metrics
 adam_results = evaluate_multiclass_model(
