@@ -7,7 +7,11 @@ from torchvision import datasets
 from torchvision import transforms
 from torchvision.transforms import ToTensor
 
+import torchmetrics
+
 import matplotlib.pyplot as plt
+
+from common.helper_fucntion import accuracy_fn
 
 """
 0. Computer vision libraries in PyTorch
@@ -139,4 +143,79 @@ print(f"Image size: {img_batch.shape}")
 print(f"Label: {label}, label size {label_batch.shape}")
 plt.savefig(
     "lessons/section5_pytorch_computer_vision/src/a_line_128_visualize_img_in_train_dataloader.png"
+)
+
+"""
+3. Model 0: buid a baseline model
+
+When starting to build a series of machine learning modeling experiments, it's best practice is to 
+start with a baseline model
+
+A baseline mode is a simple model you will try and improve upon with subsequent model/experiments.
+
+In other words: start simply and add complexity when necessary
+"""
+
+# Create a flatten layer
+flatten_model = nn.Flatten()
+
+# Get a single sample
+x = train_features_batch[0]
+print(f"Shape of x is {x.shape} -> [color_channel, height, weight]")
+# Shape of x is torch.Size([1, 28, 28]) -> [color_channel, height, weight]
+
+# Flatten the sample
+x_flatten: torch.Tensor = flatten_model(x)
+print(
+    f"After Flatten, x_flatten shape is {x_flatten.shape} -> [color_channel, height*weight]"
+)
+# After Flatten, x_flatten shape is torch.Size([1, 784]) -> [color_channel, height*weight]
+
+
+class FashionMNISTModelV0(nn.Module):
+    def __init__(self, input_shape: int, hidden_units: int, output_shape: int) -> None:
+        super().__init__()
+        self.layer_stack = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(in_features=input_shape, out_features=hidden_units),
+            nn.Linear(in_features=hidden_units, out_features=output_shape),
+        )
+
+    def forward(self, x: torch.Tensor):
+        return self.layer_stack(x)
+
+
+torch.manual_seed(42)
+
+# Setup model with input parameter
+model_0 = FashionMNISTModelV0(
+    input_shape=784,  # 28*28
+    hidden_units=10,
+    output_shape=len(class_name),  # one for every class
+).to("cpu")
+
+# check what does the model do
+dummy_x = torch.rand([1, 1, 28, 28])
+dummy_y = model_0(dummy_x)
+print(f"dummy_y is {dummy_y} | shape is {dummy_y.shape}")
+
+"""
+3.1 Set up loss, optimizer and evaluation metrics
+
+* Loss function - this is a multi-class classification problem so the loss
+function will be nn.CrossEntropyLoss()
+
+* optimizer - the optimzer torch.optim.SGD (stochastic gradient descent)
+
+* Evaluation metric - this is a classification problem, we will use accruacy as
+evaluation metric
+"""
+# Metric functions
+accuracy_calculator = torchmetrics.Accuracy(task="multiclass", num_classes=len(class_name)).to("cpu")
+
+# Loss function and optimzer
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(
+    params=model_0.parameters(),
+    lr=0.1,
 )

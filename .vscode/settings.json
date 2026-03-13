@@ -1,5 +1,5 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.defaultInterpreterPath": "/home/donghancheng85/gitrepo/hancheng_deep_learning_fun_repo/.venv/bin/python",
   "python.terminal.activateEnvironment": true,
   "python.analysis.typeCheckingMode": "basic",
   "editor.formatOnSave": true,
