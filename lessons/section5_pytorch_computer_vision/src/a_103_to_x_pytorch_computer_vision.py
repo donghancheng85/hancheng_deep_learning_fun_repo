@@ -1,9 +1,11 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from typing import Callable
 
 from timeit import default_timer
 import time
+from tqdm.auto import tqdm
 
 import torchvision
 from torchvision import datasets
@@ -184,7 +186,7 @@ class FashionMNISTModelV0(nn.Module):
             nn.Linear(in_features=hidden_units, out_features=output_shape),
         )
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.layer_stack(x)
 
 
@@ -251,3 +253,140 @@ start_time = default_timer()
 time.sleep(1.1)
 end_time = default_timer()
 print_train_time(start=start_time, end=end_time, device="cpu")
+
+"""
+3.3 Creating a training loop and training a model on batches of data
+
+1. Loop through epochs
+2. Loop through training batches, perfrom training steps, calculate train loss per batch
+3. Loop through testing batches, perfrom testing steps, calculate test loss per batch
+4. Print out what's happening
+5. Time it all (how long the training takes)
+"""
+
+# set the seed and start the timer
+torch.manual_seed(42)
+train_time_start_on_cpu = default_timer()
+
+# Set the number of epochs (keep is small for faster training time)
+epochs = 3
+
+# Create training and test loop
+for epoch in tqdm(range(epochs)):
+    print(f"Epoch: {epoch}\n ------")
+    ### Training
+    train_loss = 0
+
+    # A a loop to loop through the taining batches
+    for batch, (X, y) in enumerate(train_dataloader):
+        model_0.train()
+
+        # 1. forward pass
+        y_logits_train = model_0(X)
+
+        # 2. calculate the loss (per batch)
+        loss_train_batch: torch.Tensor = loss_fn(y_logits_train, y)
+        train_loss += loss_train_batch  # accumulate the training loss so we can calculate the average loss of the batches
+
+        # 3. Optimizer zero grad
+        optimizer.zero_grad()
+
+        # 4. loss backward
+        loss_train_batch.backward()
+
+        # 5. optimizer step
+        optimizer.step()  # model parameter will be updated once per batch
+
+        # Print out stuff
+        if batch % 400 == 0:
+            print(
+                f"Looked at: {batch * len(X)} / {len(train_data)}  samples "
+            )  # Use train_data here since it is in the "dataset" field of train_dataloader
+
+    # Divide total train loss by length of train dataloader
+    train_loss /= len(train_dataloader)
+
+    ### Testing
+    test_loss, test_accuracy = 0, 0
+    model_0.eval()
+    with torch.inference_mode():
+        for X_test, y_test in test_dataloader:
+            # 1. Forward pass
+            y_logits_test: torch.Tensor = model_0(X_test)
+
+            # 2. Calculate the loos (accumulate)
+            loss_test_batch = loss_fn(y_logits_test, y_test)
+            test_loss += loss_test_batch
+
+            # 3. calculate the accuracy
+            test_accuracy += accuracy_fn(
+                y_true=y_test, y_pred=y_logits_test.argmax(dim=1)
+            )
+
+        # Calculate the test loss average per batch
+        test_loss /= len(test_dataloader)
+
+        # Calculate the test accuracy aversge per batch
+        test_accuracy /= len(test_dataloader)
+
+    # Print out
+    print(
+        f"\n Train loss: {train_loss:.4f} | Test loss: {test_loss:.4f}, Test accuracy: {test_accuracy:.4f}"
+    )
+
+# Calucate the training time
+train_time_end_on_cpu = default_timer()
+total_train_time_model_0_cpu = print_train_time(
+    start=train_time_start_on_cpu,
+    end=train_time_end_on_cpu,
+    device=str(next(model_0.parameters()).device),
+)
+# Sample output: Train time on cpu: 3.966 seconds
+
+"""
+4. Make prediction and get model_0 result (evaluation)
+"""
+torch.manual_seed(42)
+
+
+def evaluate_model(
+    model: torch.nn.Module,
+    data_loader: torch.utils.data.DataLoader,
+    loss_fn: torch.nn.Module,
+    accuracy_fn: Callable[[torch.Tensor, torch.Tensor], float],
+) -> dict[str, str | float]:
+    """
+    Returns a dictionary containing the results of model predicting on data_loader
+    """
+    loss, accuracy = 0, 0
+    model.eval()
+    with torch.inference_mode():
+        for X, y in data_loader:
+            y_logits_prediction: torch.Tensor = model(X)
+
+            # Accmulate the loss and accruacy values per batch
+            loss_batch = loss_fn(y_logits_prediction, y)
+            loss += loss_batch
+            accuracy_batch = accuracy_fn(y, y_logits_prediction.argmax(dim=1))
+            accuracy += accuracy_batch
+
+        # Scale loss and accuracy to find the average loss/acc per batch
+        loss /= len(data_loader)
+        accuracy /= len(data_loader)
+        loss: torch.Tensor
+
+    return {
+        "model_name": model.__class__.__name__,
+        "model_loss": loss.item(),
+        "model_accuracy": accuracy,
+    }
+
+# Calculate model_0 results on test dataset
+model_0_results = evaluate_model(
+    model=model_0,
+    data_loader=test_dataloader,
+    loss_fn=loss_fn,
+    accuracy_fn=accuracy_fn,
+)
+
+print(model_0_results)
