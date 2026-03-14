@@ -6,6 +6,7 @@ from typing import Callable
 from timeit import default_timer
 import time
 from tqdm.auto import tqdm
+from pathlib import Path
 
 import torchvision
 from torchvision import datasets
@@ -390,3 +391,13 @@ model_0_results = evaluate_model(
 )
 
 print(model_0_results)
+
+"""
+4.1. Save model_0 for future comparison
+"""
+MODEL_PATH = Path("lessons/section5_pytorch_computer_vision/models")
+MODEL_PATH.mkdir(parents=True, exist_ok=True)
+
+MODEL_SAVE_PATH = MODEL_PATH / "section5_model_0_fashionMNIST.pth"
+torch.save(obj=model_0.state_dict(), f=MODEL_SAVE_PATH)
+print(f"Model saved to: {MODEL_SAVE_PATH}")

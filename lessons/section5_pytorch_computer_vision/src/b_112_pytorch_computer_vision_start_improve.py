@@ -16,7 +16,8 @@ import torchmetrics
 
 import matplotlib.pyplot as plt
 
-from common.helper_fucntion import accuracy_fn
+from common.helper_fucntion import accuracy_fn, print_train_time
+from common.device import get_best_device, print_device_info
 
 """
 0. Computer vision libraries in PyTorch
@@ -56,12 +57,6 @@ print(f"Train data length {len(train_data)} | test data {len(test_data)}")
 image, label = train_data[0]
 image: torch.Tensor
 class_name = train_data.classes
-print(f"Class names {train_data.classes}")
-print(f"Class to index {train_data.class_to_idx}")
-print(
-    f"Type of image {type(image)} | shape {image.shape} -> [C, H, W] | label class {class_name[label]}"
-)
-
 """
 2. Prepare DataLoader
 
@@ -108,3 +103,10 @@ print(
     f"one batch of train_features {train_features_batch.shape} | train_labels {train_labels_batch.shape}"
 )
 # one batch of train_features torch.Size([32, 1, 28, 28]) | train_labels torch.Size([32])
+
+"""
+5. Set up device agnostic-code (if GPU is avaliable)
+"""
+device = get_best_device()
+print_device_info(device=device)
+
