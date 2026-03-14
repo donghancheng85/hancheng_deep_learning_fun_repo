@@ -2,6 +2,9 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
+from timeit import default_timer
+import time
+
 import torchvision
 from torchvision import datasets
 from torchvision import transforms
@@ -211,7 +214,9 @@ function will be nn.CrossEntropyLoss()
 evaluation metric
 """
 # Metric functions
-accuracy_calculator = torchmetrics.Accuracy(task="multiclass", num_classes=len(class_name)).to("cpu")
+accuracy_calculator = torchmetrics.Accuracy(
+    task="multiclass", num_classes=len(class_name)
+).to("cpu")
 
 # Loss function and optimzer
 loss_fn = nn.CrossEntropyLoss()
@@ -219,3 +224,30 @@ optimizer = torch.optim.SGD(
     params=model_0.parameters(),
     lr=0.1,
 )
+
+"""
+3.2 Create a function to time our experiments
+
+Machine learning is very experimental.
+
+Two main things we often want to track are:
+1. Model's metrics (loss, accuracy, precision, recall...)
+2. How fast it runs
+The above two sometimes are trade-offs
+"""
+
+
+def print_train_time(start: float, end: float, device: torch.device | str) -> float:
+    """
+    Print the difference between start and end time
+    """
+    total_time = end - start
+    print(f"Train time on {device}: {total_time:.3f} seconds")
+    return total_time
+
+
+# test print_train_time
+start_time = default_timer()
+time.sleep(1.1)
+end_time = default_timer()
+print_train_time(start=start_time, end=end_time, device="cpu")
