@@ -382,6 +382,7 @@ def evaluate_model(
         "model_accuracy": accuracy,
     }
 
+
 # Calculate model_0 results on test dataset
 model_0_results = evaluate_model(
     model=model_0,

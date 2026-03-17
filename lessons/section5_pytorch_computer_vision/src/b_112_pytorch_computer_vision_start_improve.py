@@ -110,3 +110,97 @@ print(
 device = get_best_device()
 print_device_info(device=device)
 
+
+"""
+6. Model 1, building a better model with non-linearity
+
+Non-linearity is powerful when dealing with problem with non-linearity.
+"""
+
+
+# Create a model with non-linear and linear layers
+class FashionMNISTModelV1(nn.Module):
+    def __init__(self, input_shape: int, hidden_units: int, output_shape: int) -> None:
+        super().__init__()
+        self.layer_stack = nn.Sequential(
+            nn.Flatten(),  # Flatten input into a single vector
+            nn.Linear(in_features=input_shape, out_features=hidden_units),
+            nn.ReLU(),
+            nn.Linear(in_features=hidden_units, out_features=output_shape),
+            nn.ReLU(),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.layer_stack(x)
+
+
+# Create an instance of model_1, input shape is 28*28
+torch.manual_seed(42)
+model_1 = FashionMNISTModelV1(
+    input_shape=784, hidden_units=10, output_shape=len(class_name)
+).to(device)
+
+print(f"model_1 is on {next(model_1.parameters()).device}")
+
+
+"""
+6.1 Setup loss, optimizer and evluation metric
+"""
+
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(
+    params=model_1.parameters(),
+    lr=0.1,
+)
+
+"""
+6.2 Functionizing training and evaluation/testing loop
+
+Will create function for:
+- training loop - train_step()
+- testing loop - test_step()
+"""
+
+
+def train_step(
+    model: nn.Module,
+    data_loader: torch.utils.data.DataLoader,
+    loss_fn: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    accruacy_fn,
+    device: torch.device = device,
+):
+    """
+    Perform a trining with model trying to learn on data_loader
+    """
+    train_loss, train_accuracy = 0, 0
+
+    # Put model into training mode and target device
+    model.train()
+
+    # A a loop to loop through the taining batches
+    for batch, (X, y) in enumerate(data_loader):
+        # put data on target device
+        X, y = X.to(device), y.to(device)
+
+        # 1. forward pass
+        y_logits_train = model(X)
+
+        # 2. calculate the loss accruacy (per batch)
+        loss_train_batch: torch.Tensor = loss_fn(y_logits_train, y)
+        train_loss += loss_train_batch  # accumulate the training loss so we can calculate the average loss of the batches
+        train_accuracy += accruacy_fn(y_true=y, y_pred=y_logits_train.argmax(dim=1))
+
+        # 3. Optimizer zero grad
+        optimizer.zero_grad()
+
+        # 4. loss backward
+        loss_train_batch.backward()
+
+        # 5. optimizer step
+        optimizer.step()  # model parameter will be updated once per batch
+
+    # Divide total train loss and accuracy by length of data_loader
+    train_loss /= len(data_loader)
+    train_accuracy /= len(data_loader)
+    print(f"Train loss: {train_loss:.5f} | Train accuracy: {train_accuracy:.2f}%")
