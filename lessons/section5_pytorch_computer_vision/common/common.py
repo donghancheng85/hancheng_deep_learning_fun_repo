@@ -90,7 +90,7 @@ def train_step(
         # 2. calculate the loss accruacy (per batch)
         loss_train_batch: torch.Tensor = loss_fn(y_logits_train, y)
         train_loss += loss_train_batch  # accumulate the training loss so we can calculate the average loss of the batches
-        train_accuracy += accruacy_fn(y_true=y, y_pred=y_logits_train.argmax(dim=1))
+        train_accuracy += accruacy_fn(y, y_logits_train.argmax(dim=1))
 
         # 3. Optimizer zero grad
         optimizer.zero_grad()
@@ -142,9 +142,7 @@ def test_step(
             test_loss += loss_test_batch
 
             # 3. calculate the accuracy
-            test_accuracy += accuracy_fn(
-                y_true=y_test, y_pred=y_logits_test.argmax(dim=1)
-            )
+            test_accuracy += accuracy_fn(y_test, y_logits_test.argmax(dim=1))
 
         # Calculate the test loss average per batch
         test_loss /= len(data_loader)

@@ -72,7 +72,7 @@ So we break it down to 32 images a time (batch size of 32 -- can be changed)
 """
 # Set up the batch size hyperparameter
 # Larger batch size keeps the GPU fed and reduces per-batch kernel launch overhead
-BATCH_SIZE = 256
+BATCH_SIZE = 32
 
 # Turn data set into iterables (batches)
 # pin_memory=True: pre-allocates data in page-locked memory for faster CPU->GPU transfer
@@ -258,7 +258,7 @@ torch.manual_seed(42)
 train_time_start_on_gpu = default_timer()
 
 # Set the number of epochs (keep is small for faster training time)
-epochs = 6
+epochs = 3
 
 # Create a optimization and evaluation loop uisng train_step() and test_step()
 for epoch in tqdm(range(epochs)):
@@ -288,8 +288,8 @@ total_train_time_on_gpu = print_train_time(
     end=train_time_end_on_gpu,
     device=str(next(model_1.parameters()).device),
 )
-# Sample output: Train time on cuda:0: 2.445 seconds
-# ^ increased batch size to fully utilize GPU so accuracy will be lower but time is better.
+# Sample output: Train time on cuda:0: 3.087 seconds
+# ^ increased num_worker to more utilize GPU.
 
 """
 Note: Sometimes, depending on data/hardware, the model may train faster on CPU than GPU.
@@ -308,7 +308,7 @@ model_1_results = evaluate_model(
 )
 
 print(model_1_results)
-# Sample output: {'model_name': 'FashionMNISTModelV1', 'model_loss': 0.9154605269432068, 'model_accuracy': 66.19140625}
+# Sample output: {'model_name': 'FashionMNISTModelV1', 'model_loss': 0.6850008368492126, 'model_accuracy': 75.01996805111821}
 
 """
 Save model_1 for future comparison
