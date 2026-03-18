@@ -6,6 +6,7 @@ from typing import Callable
 from timeit import default_timer
 import time
 from tqdm.auto import tqdm
+from pathlib import Path
 
 import torchvision
 from torchvision import datasets
@@ -18,6 +19,7 @@ import matplotlib.pyplot as plt
 
 from common.helper_fucntion import accuracy_fn, print_train_time
 from common.device import get_best_device, print_device_info
+from lessons.section5_pytorch_computer_vision.common.common import evaluate_model
 
 """
 0. Computer vision libraries in PyTorch
@@ -69,13 +71,18 @@ So we break it down to 32 images a time (batch size of 32 -- can be changed)
 2. It gives our nerual network more chances to update its gradients per epoch
 """
 # Set up the batch size hyperparameter
-BATCH_SIZE = 32
+# Larger batch size keeps the GPU fed and reduces per-batch kernel launch overhead
+BATCH_SIZE = 256
 
 # Turn data set into iterables (batches)
+# pin_memory=True: pre-allocates data in page-locked memory for faster CPU->GPU transfer
+# num_workers=4: loads batches in parallel background processes so GPU never waits for data
 train_dataloader = DataLoader(
     dataset=train_data,
     batch_size=BATCH_SIZE,
     shuffle=True,
+    pin_memory=True,
+    num_workers=4,
 )
 
 # No need to shuffle test data, it will not be used in training
@@ -83,6 +90,8 @@ test_dataloader = DataLoader(
     dataset=test_data,
     batch_size=BATCH_SIZE,
     shuffle=False,
+    pin_memory=True,
+    num_workers=4,
 )
 
 # Check out the train and test dataloader
@@ -204,3 +213,110 @@ def train_step(
     train_loss /= len(data_loader)
     train_accuracy /= len(data_loader)
     print(f"Train loss: {train_loss:.5f} | Train accuracy: {train_accuracy:.2f}%")
+
+
+def test_step(
+    model: nn.Module,
+    data_loader: torch.utils.data.DataLoader,
+    loss_fn: nn.Module,
+    accuracy_fn,
+    device: torch.device = device,
+):
+    """
+    Perform a testing loop step on model going over data_loader
+    """
+    test_loss, test_accuracy = 0, 0
+    model.eval()
+    with torch.inference_mode():
+        for X_test, y_test in data_loader:
+            X_test = X_test.to(device)
+            y_test = y_test.to(device)
+            # 1. Forward pass
+            y_logits_test: torch.Tensor = model(X_test)
+
+            # 2. Calculate the loos (accumulate)
+            loss_test_batch = loss_fn(y_logits_test, y_test)
+            test_loss += loss_test_batch
+
+            # 3. calculate the accuracy
+            test_accuracy += accuracy_fn(
+                y_true=y_test, y_pred=y_logits_test.argmax(dim=1)
+            )
+
+        # Calculate the test loss average per batch
+        test_loss /= len(data_loader)
+
+        # Calculate the test accuracy aversge per batch
+        test_accuracy /= len(data_loader)
+
+        print(f"\nTest loss: {test_loss:.5f}, Test accuracy: {test_accuracy:.2f}%\n")
+
+
+torch.manual_seed(42)
+
+# Measure time (on GPU)
+train_time_start_on_gpu = default_timer()
+
+# Set the number of epochs (keep is small for faster training time)
+epochs = 6
+
+# Create a optimization and evaluation loop uisng train_step() and test_step()
+for epoch in tqdm(range(epochs)):
+    print(f"Epoch: {epoch}\n ------")
+
+    train_step(
+        model=model_1,
+        data_loader=train_dataloader,
+        loss_fn=loss_fn,
+        optimizer=optimizer,
+        accruacy_fn=accuracy_fn,
+        device=device,
+    )
+
+    test_step(
+        model=model_1,
+        data_loader=test_dataloader,
+        loss_fn=loss_fn,
+        accuracy_fn=accuracy_fn,
+        device=device,
+    )
+
+train_time_end_on_gpu = default_timer()
+
+total_train_time_on_gpu = print_train_time(
+    start=train_time_start_on_gpu,
+    end=train_time_end_on_gpu,
+    device=str(next(model_1.parameters()).device),
+)
+# Sample output: Train time on cuda:0: 2.445 seconds
+# ^ increased batch size to fully utilize GPU so accuracy will be lower but time is better.
+
+"""
+Note: Sometimes, depending on data/hardware, the model may train faster on CPU than GPU.
+Reason:
+1. the overhead of copying data/model to and from GPU out weight the comput benefits offered by GPU.
+2. The CPU may have a better performance than GPU (rare)
+"""
+
+# Get model_1 results dictionary
+model_1_results = evaluate_model(
+    model=model_1,
+    data_loader=test_dataloader,
+    loss_fn=loss_fn,
+    accuracy_fn=accuracy_fn,
+    device=device,
+)
+
+print(model_1_results)
+# Sample output: {'model_name': 'FashionMNISTModelV1', 'model_loss': 0.9154605269432068, 'model_accuracy': 66.19140625}
+
+"""
+Save model_1 for future comparison
+"""
+
+MODEL_PATH = Path("lessons/section5_pytorch_computer_vision/models")
+MODEL_PATH.mkdir(parents=True, exist_ok=True)
+
+MODEL_SAVE_PATH = MODEL_PATH / "section5_model_1_fashionMNIST.pth"
+torch.save(obj=model_1.state_dict(), f=MODEL_SAVE_PATH)
+print(f"Model saved to: {MODEL_SAVE_PATH}")
