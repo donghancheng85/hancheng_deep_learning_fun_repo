@@ -120,7 +120,7 @@ device = get_best_device()
 print_device_info(device=device)
 
 """
-Model 2: Building a Convolutional Neural Network (CNN)
+7. Model 2: Building a Convolutional Neural Network (CNN)
 
 CNN also called ConvNets
 CNN are know for their capabilities to find patterns in visual data
@@ -149,25 +149,25 @@ class FashionMNISTModelV2(nn.Module):
         # MaxPool2d (kernel=2, stride defaults to kernel=2):
         #             H_out = floor(28 / 2) = 14   →  [batch, hidden_units, 14, 14]
         self.conv_block_1 = nn.Sequential(
-                nn.Conv2d(
-                    in_channels=input_shape,   # 1 for grayscale (FashionMNIST), 3 for RGB
-                    out_channels=hidden_units, # number of learned filters / feature maps
-                    kernel_size=3,             # 3×3 sliding window
-                    stride=1,                  # move window 1 pixel at a time
-                    padding=1,                 # pad borders so spatial size is preserved after conv
-                ),
-                nn.ReLU(),
-                nn.Conv2d(
-                    in_channels=hidden_units,
-                    out_channels=hidden_units,
-                    kernel_size=3,
-                    stride=1,
-                    padding=1,
-                ),
-                nn.ReLU(),
-                nn.MaxPool2d(
-                    kernel_size=2,  # halves spatial dimensions: 28×28 → 14×14
-                ),
+            nn.Conv2d(
+                in_channels=input_shape,  # 1 for grayscale (FashionMNIST), 3 for RGB
+                out_channels=hidden_units,  # number of learned filters / feature maps
+                kernel_size=3,  # 3×3 sliding window
+                stride=1,  # move window 1 pixel at a time
+                padding=1,  # pad borders so spatial size is preserved after conv
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
+            nn.ReLU(),
+            nn.MaxPool2d(
+                kernel_size=2,  # halves spatial dimensions: 28×28 → 14×14
+            ),
         )
 
         # --- Conv Block 2 ---
@@ -205,21 +205,49 @@ class FashionMNISTModelV2(nn.Module):
             nn.Flatten(),
             nn.Linear(
                 in_features=hidden_units * 7 * 7,  # must match flattened conv output
-                out_features=output_shape,          # one logit per class
-            )
+                out_features=output_shape,  # one logit per class
+            ),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x: [batch, 1, 28, 28]
-        x = self.conv_block_1(x)   # → [batch, hidden_units, 14, 14]
-        x = self.conv_block_2(x)   # → [batch, hidden_units,  7,  7]
-        x = self.classifier(x)     # → [batch, output_shape]
+        x = self.conv_block_1(x)  # → [batch, hidden_units, 14, 14]
+        x = self.conv_block_2(x)  # → [batch, hidden_units,  7,  7]
+        x = self.classifier(x)  # → [batch, output_shape]
         return x
+
 
 torch.manual_seed(42)
 
 model_2 = FashionMNISTModelV2(
-    input_shape=1, # number of color channels in the image, FashionMNIST has only 1 channel
+    input_shape=1,  # number of color channels in the image, FashionMNIST has only 1 channel
     hidden_units=10,
-    output_shape=len(class_name)
+    output_shape=len(class_name),
 ).to(device)
+
+
+"""
+7.1 Stepping through nn.Conv2d()
+"""
+torch.manual_seed(42)
+
+# Create a batch of images
+images = torch.randn(size=(32, 3, 64, 64)) # batch, color channel, hight, width
+test_image = images[0]
+
+print(f"Image batch shape: {images.shape}")
+print(f"Single image shape: {test_image.shape}")
+# print(f"Test image: \n{test_image}")
+
+# Create a Conv2d layer
+conv_layer = nn.Conv2d(
+    in_channels=3,
+    out_channels=10,
+    kernel_size=3,
+    stride=1,
+    padding=1,
+)
+
+# Pass the data throught the convolutional layer
+conv_output = conv_layer(test_image)
+print(f"after the conv_layer, conv_output shape is {conv_output.shape}")
