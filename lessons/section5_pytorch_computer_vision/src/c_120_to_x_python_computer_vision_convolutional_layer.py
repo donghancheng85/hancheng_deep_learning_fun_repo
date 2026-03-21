@@ -7,6 +7,7 @@ from timeit import default_timer
 import time
 from tqdm.auto import tqdm
 from pathlib import Path
+import pandas as pd
 
 import torchvision
 from torchvision import datasets
@@ -19,7 +20,11 @@ import matplotlib.pyplot as plt
 
 from common.helper_fucntion import accuracy_fn, print_train_time
 from common.device import get_best_device, print_device_info
-from lessons.section5_pytorch_computer_vision.common.common import evaluate_model
+from lessons.section5_pytorch_computer_vision.common.common import (
+    evaluate_model,
+    train_step,
+    test_step,
+)
 
 """
 0. Computer vision libraries in PyTorch
@@ -212,8 +217,13 @@ class FashionMNISTModelV2(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x: [batch, 1, 28, 28]
         x = self.conv_block_1(x)  # → [batch, hidden_units, 14, 14]
+        # print(
+        #     f"Output shape of conv_block_1 {x.shape}"
+        # )  # trick to check what will be the shape of the output tensor of CNN
         x = self.conv_block_2(x)  # → [batch, hidden_units,  7,  7]
+        # print(f"Output shape of conv_block_1  {x.shape}")
         x = self.classifier(x)  # → [batch, output_shape]
+        # print(f"Output shape of classifier  {x.shape}")
         return x
 
 
@@ -232,7 +242,7 @@ model_2 = FashionMNISTModelV2(
 torch.manual_seed(42)
 
 # Create a batch of images
-images = torch.randn(size=(32, 3, 64, 64)) # batch, color channel, hight, width
+images = torch.randn(size=(32, 3, 64, 64))  # batch, color channel, hight, width
 test_image = images[0]
 
 print(f"Image batch shape: {images.shape}")
@@ -258,7 +268,9 @@ print(f"after the conv_layer, conv_output shape is {conv_output.shape}")
 # Use the created "simulation" images to pass through the MaxPool2d
 print(f"\nImage batch shape: {images.shape}")
 print(f"Single image shape: {test_image.shape}")
-print(f"Single image shape with unsqueezed dimension: {test_image.unsqueeze(dim=0).shape}")
+print(
+    f"Single image shape with unsqueezed dimension: {test_image.unsqueeze(dim=0).shape}"
+)
 
 # Create nn.MaxPool2d layer
 max_pool_layer = nn.MaxPool2d(kernel_size=2)
@@ -269,7 +281,9 @@ print(f"test image through conv_layer(): {test_image_through_conv.shape}")
 
 # Pass data through the max pool layer
 test_image_through_conv_and_max_pool = max_pool_layer(test_image_through_conv)
-print(f"Shape after going through conv_layer() and max_pool_layer(): {test_image_through_conv_and_max_pool.shape}")
+print(
+    f"Shape after going through conv_layer() and max_pool_layer(): {test_image_through_conv_and_max_pool.shape}"
+)
 
 # Create a smaller tensor so easy to visualize, with similar tensor
 torch.manual_seed(42)
@@ -286,3 +300,186 @@ max_pool_tensor: torch.Tensor = max_pool_layer(random_tensor)
 print(f"\n max_pool_tensor: \n {max_pool_tensor}")
 print(f"max_pool_tensor shape: {max_pool_tensor.shape}")
 
+# To check how the model change dim of the image, pass image through model_2
+out_image = model_2(image.unsqueeze(dim=0).to(device))
+print(f"out_image shape is {out_image.shape}")
+
+rand_image_tensor = torch.randn(size=(1, 1, 28, 28))
+print(f"rand image tensor shape: {rand_image_tensor.shape}")
+out_rand_image_tensor = model_2(rand_image_tensor.to(device))
+print(f"out_rand_image_tensor shape: {out_rand_image_tensor.shape}")
+
+"""
+7.3 setup loss funcion and optimizer for model_2 (TinyVGG)
+"""
+# Setup loss function/eval metrics/optimizer
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(params=model_2.parameters(), lr=0.1)
+
+"""
+7.4 Trainig and testing model_2 (TinyVGG)
+"""
+torch.manual_seed(42)
+torch.cuda.manual_seed_all(42)
+
+# Measure time
+train_time_start_model_2 = default_timer()
+
+# Train and test model
+epochs = 3
+for epoch in tqdm(range(epochs)):
+    print(f"Epoch: {epoch} \n-----------")
+    train_step(
+        model=model_2,
+        data_loader=train_dataloader,
+        loss_fn=loss_fn,
+        optimizer=optimizer,
+        accruacy_fn=accuracy_fn,
+        device=device
+    )
+
+    test_step(
+        model=model_2,
+        data_loader=test_dataloader,
+        loss_fn=loss_fn,
+        accuracy_fn=accuracy_fn,
+        device=device,
+    )
+
+train_time_end_model_2 = default_timer()
+
+total_train_time_model_2 = print_train_time(
+    start=train_time_start_model_2,
+    end=train_time_end_model_2,
+    device=device,
+)
+
+
+# Get model_2 results
+model_2_result = evaluate_model(
+    model=model_2,
+    data_loader=test_dataloader,
+    loss_fn=loss_fn,
+    accuracy_fn=accuracy_fn,
+    device=device,
+)
+print(model_2_result)
+# Sample output: {'model_name': 'FashionMNISTModelV2', 'model_loss': 0.3200104832649231, 'model_accuracy': 88.29872204472844}
+
+"""
+8. Load saved model_0 and model_1 and compare them with model_2
+
+Both model_0 and model_1 were saved as state_dicts via torch.save(model.state_dict(), path).
+To reload a state_dict you must:
+  1. Re-create the model instance with the same architecture / constructor args.
+  2. Call model.load_state_dict(torch.load(path, weights_only=True)).
+  3. Move the model to the target device with model.to(device).
+  4. Call model.eval() so dropout/batchnorm behave correctly during inference.
+"""
+
+# --- Re-define model_0 architecture (from section5/src/a_103_...) ---
+# Baseline: Flatten → Linear → Linear  (no activation, no conv)
+class FashionMNISTModelV0(nn.Module):
+    def __init__(self, input_shape: int, hidden_units: int, output_shape: int) -> None:
+        super().__init__()
+        self.layer_stack = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(in_features=input_shape, out_features=hidden_units),
+            nn.Linear(in_features=hidden_units, out_features=output_shape),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.layer_stack(x)
+
+
+# --- Re-define model_1 architecture (from section5/src/b_112_...) ---
+# Improved baseline: adds ReLU after each Linear layer
+class FashionMNISTModelV1(nn.Module):
+    def __init__(self, input_shape: int, hidden_units: int, output_shape: int) -> None:
+        super().__init__()
+        self.layer_stack = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(in_features=input_shape, out_features=hidden_units),
+            nn.ReLU(),
+            nn.Linear(in_features=hidden_units, out_features=output_shape),
+            nn.ReLU(),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.layer_stack(x)
+
+
+# --- Paths to saved state dicts ---
+MODEL_PATH = Path("lessons/section5_pytorch_computer_vision/models")
+MODEL_0_PATH = MODEL_PATH / "section5_model_0_fashionMNIST.pth"
+MODEL_1_PATH = MODEL_PATH / "section5_model_1_fashionMNIST.pth"
+
+# --- Instantiate with the same constructor args used during training ---
+# FashionMNIST images are 28×28 = 784 pixels; 10 classes
+model_0 = FashionMNISTModelV0(input_shape=784, hidden_units=10, output_shape=len(class_name))
+model_1 = FashionMNISTModelV1(input_shape=784, hidden_units=10, output_shape=len(class_name))
+
+# --- Load state dicts ---
+# weights_only=True is recommended (avoids arbitrary code execution from pickle)
+model_0.load_state_dict(torch.load(f=MODEL_0_PATH, weights_only=True))
+model_1.load_state_dict(torch.load(f=MODEL_1_PATH, weights_only=True))
+
+# Move to device and switch to eval mode
+model_0.to(device)
+model_1.to(device)
+
+# --- Evaluate loaded models on the test set ---
+model_0_result = evaluate_model(
+    model=model_0,
+    data_loader=test_dataloader,
+    loss_fn=loss_fn,
+    accuracy_fn=accuracy_fn,
+    device=device,
+)
+
+model_1_result = evaluate_model(
+    model=model_1,
+    data_loader=test_dataloader,
+    loss_fn=loss_fn,
+    accuracy_fn=accuracy_fn,
+    device=device,
+)
+
+# --- Side-by-side comparison ---
+compare_results = pd.DataFrame([model_0_result, model_1_result, model_2_result])
+compare_results["training_time"] = [4.090, 3.087, total_train_time_model_2] # model_0 1 time is copied from other files
+print("\nModel comparison:")
+print(compare_results)
+"""
+Sample output:
+Model comparison:
+            model_name  model_loss  model_accuracy  training_time
+0  FashionMNISTModelV0    0.476639       83.426518        4.09000
+1  FashionMNISTModelV1    0.685001       75.019968        3.08700
+2  FashionMNISTModelV2    0.334073       88.238818        4.37878
+"""
+
+# Visualize out model results
+compare_results.set_index("model_name")["model_accuracy"].plot(kind="barh")
+# plt.figure(figsize=(12, 12))
+plt.xlabel("accuracy %")
+plt.ylabel("model")
+plt.tight_layout()  # auto-adjust margins so y-axis model name labels are not clipped
+plt.savefig(
+    "lessons/section5_pytorch_computer_vision/src/c_line_466_visualize_model_comparsion.png"
+)
+
+"""
+9. Save model_2 so it can be loaded for future comparisons
+
+We only save the state_dict (learned weights), not the full model object.
+Reasons:
+  - Smaller file size (no Python class code stored).
+  - More portable: works across PyTorch versions as long as the class definition exists.
+  - To reload: instantiate FashionMNISTModelV2 with the same args, then call load_state_dict().
+"""
+MODEL_2_SAVE_PATH = MODEL_PATH / "section5_model_2_fashionMNIST.pth"
+# MODEL_PATH already defined above as Path("lessons/section5_pytorch_computer_vision/models")
+MODEL_PATH.mkdir(parents=True, exist_ok=True)  # create the directory if it doesn't exist yet
+torch.save(obj=model_2.state_dict(), f=MODEL_2_SAVE_PATH)
+print(f"Model 2 saved to: {MODEL_2_SAVE_PATH}")
