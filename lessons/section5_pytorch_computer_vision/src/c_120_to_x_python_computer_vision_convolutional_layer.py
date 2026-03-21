@@ -245,9 +245,44 @@ conv_layer = nn.Conv2d(
     out_channels=10,
     kernel_size=3,
     stride=1,
-    padding=1,
+    padding=0,
 )
 
 # Pass the data throught the convolutional layer
 conv_output = conv_layer(test_image)
 print(f"after the conv_layer, conv_output shape is {conv_output.shape}")
+
+"""
+7.2 Stepping throught nn.MaxPool2d()
+"""
+# Use the created "simulation" images to pass through the MaxPool2d
+print(f"\nImage batch shape: {images.shape}")
+print(f"Single image shape: {test_image.shape}")
+print(f"Single image shape with unsqueezed dimension: {test_image.unsqueeze(dim=0).shape}")
+
+# Create nn.MaxPool2d layer
+max_pool_layer = nn.MaxPool2d(kernel_size=2)
+
+# Pass data through just the conv layer
+test_image_through_conv = conv_layer(test_image)
+print(f"test image through conv_layer(): {test_image_through_conv.shape}")
+
+# Pass data through the max pool layer
+test_image_through_conv_and_max_pool = max_pool_layer(test_image_through_conv)
+print(f"Shape after going through conv_layer() and max_pool_layer(): {test_image_through_conv_and_max_pool.shape}")
+
+# Create a smaller tensor so easy to visualize, with similar tensor
+torch.manual_seed(42)
+random_tensor = torch.randn(size=(1, 1, 2, 2))
+print(f"\nrandom_tensor: \n{random_tensor}")
+print(f"random_tensor shape: {random_tensor.shape}")
+
+# Create a nother MaxPool2d layer
+max_pool_layer = nn.MaxPool2d(kernel_size=2)
+
+# Pass the random tensor throught the max pool layer
+max_pool_tensor: torch.Tensor = max_pool_layer(random_tensor)
+
+print(f"\n max_pool_tensor: \n {max_pool_tensor}")
+print(f"max_pool_tensor shape: {max_pool_tensor.shape}")
+
