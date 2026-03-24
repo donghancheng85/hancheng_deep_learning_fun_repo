@@ -62,6 +62,7 @@ lightning-utilities==0.15.2
 MarkupSafe==3.0.2
 matplotlib-inline==0.2.1
 matplotlib==3.10.8
+mlxtend==0.24.0
 mistune==3.2.0
 mpmath==1.3.0
 mypy_extensions==1.1.0

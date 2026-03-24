@@ -16,6 +16,7 @@ Key inference steps:
 
 import torch
 from torch import nn
+from torch.utils.data import DataLoader
 from pathlib import Path
 import random
 
@@ -23,7 +24,12 @@ import torchvision
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 
+import mlxtend
+
+import torchmetrics
+
 import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
 
 from common.device import get_best_device, print_device_info
 
@@ -43,6 +49,15 @@ test_data = datasets.FashionMNIST(
     transform=ToTensor(),
 )
 class_names = test_data.classes  # list of 10 class name strings
+BATCH_SIZE = 32
+
+test_dataloader = DataLoader(
+    dataset=test_data,
+    batch_size=BATCH_SIZE,
+    shuffle=False,
+    pin_memory=True,
+    num_workers=4,
+)
 
 # ---------------------------------------------------------------------------
 # 3. Re-define FashionMNISTModelV2 architecture
@@ -128,7 +143,7 @@ def make_predictions(
     return torch.stack(pre_probs)
 
 # Visualize and compare
-# random.seed(42)
+random.seed(42)
 test_samples = []
 test_labels = []
 
@@ -183,3 +198,38 @@ for index, sample in enumerate(test_samples):
 plt.savefig(
     "lessons/section5_pytorch_computer_vision/src/d_line_182_visualize_random_predictions.png"
 )
+
+"""
+10. Making a confusion matrix for further evaluation
+
+A confusion matrix is a great way to evaluation classification models visually
+1. Make perdiction of trained model on the test dataset
+2. make confusion matrix "torchmetrics.ConfusionMatrix"
+3. To plot the confusion matrix, using mlxtend.plotting.plot_confusion_matrix()
+"""
+
+# 1. Make predictions with trained model
+y_preds = []
+model_2.eval()
+with torch.inference_mode():
+    for X, y in tqdm(test_dataloader, desc="Making predictions...."):
+        # Send the data and targets to target device
+        X, y = X.to(device), y.to(device)
+
+        # Forward pass
+        y_logits = model_2(X)
+
+        # Turn prediction logits → predicted class index
+        # argmax(dim=1): pick the class with the highest logit across the 10 classes (dim=1).
+        # No need for softmax here — softmax is monotonically increasing so argmax(softmax(x)) == argmax(x).
+        # Avoid dim=0 which would incorrectly normalize across the batch instead of classes.
+        y_pred = torch.softmax(y_logits, dim=1).argmax(dim=1)
+
+        # Put prediction on CPU for evaluation
+        y_preds.append(y_pred.cpu())
+
+# Concatenate list of predictions into a tensor
+y_preds_tensor = torch.cat(y_preds)
+print(y_preds_tensor[:10])
+
+
