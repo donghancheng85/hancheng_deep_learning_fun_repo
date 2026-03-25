@@ -24,7 +24,7 @@ import torchvision
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 
-import mlxtend
+from mlxtend.plotting import plot_confusion_matrix
 
 import torchmetrics
 
@@ -59,6 +59,7 @@ test_dataloader = DataLoader(
     num_workers=4,
 )
 
+
 # ---------------------------------------------------------------------------
 # 3. Re-define FashionMNISTModelV2 architecture
 #    The architecture MUST exactly match what was used when the weights were saved.
@@ -70,16 +71,40 @@ class FashionMNISTModelV2(nn.Module):
     def __init__(self, input_shape: int, hidden_units: int, output_shape: int) -> None:
         super().__init__()
         self.conv_block_1 = nn.Sequential(
-            nn.Conv2d(in_channels=input_shape, out_channels=hidden_units, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(
+                in_channels=input_shape,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
             nn.ReLU(),
-            nn.Conv2d(in_channels=hidden_units, out_channels=hidden_units, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),  # 28×28 → 14×14
         )
         self.conv_block_2 = nn.Sequential(
-            nn.Conv2d(in_channels=hidden_units, out_channels=hidden_units, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
             nn.ReLU(),
-            nn.Conv2d(in_channels=hidden_units, out_channels=hidden_units, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),  # 14×14 → 7×7
         )
@@ -101,7 +126,7 @@ MODEL_PATH = Path("lessons/section5_pytorch_computer_vision/models")
 MODEL_2_PATH = MODEL_PATH / "section5_model_2_fashionMNIST.pth"
 
 model_2 = FashionMNISTModelV2(
-    input_shape=1,       # grayscale
+    input_shape=1,  # grayscale
     hidden_units=10,
     output_shape=len(class_names),  # 10 classes
 )
@@ -117,10 +142,10 @@ print(f"Model loaded from {MODEL_2_PATH} and set to eval mode.")
 """
 9, Make and evaulate random prediction with best model (tinyVGG)
 """
+
+
 def make_predictions(
-    model: nn.Module,
-    data: list,
-    device: torch.device = device
+    model: nn.Module, data: list, device: torch.device = device
 ) -> torch.Tensor:
     pre_probs = []
     model.to(device)
@@ -134,13 +159,16 @@ def make_predictions(
             prediction_logit: torch.Tensor = model(sample)
 
             # Get prediction probability (logit -> prediction probability)
-            prediction_probability = torch.softmax(prediction_logit.squeeze(dim=0), dim=0)
+            prediction_probability = torch.softmax(
+                prediction_logit.squeeze(dim=0), dim=0
+            )
 
             # Get pre_prob off GPU for further calculations
             pre_probs.append(prediction_probability.to("cpu"))
 
     # Stack the pred_probs to turn list into tensor
     return torch.stack(pre_probs)
+
 
 # Visualize and compare
 random.seed(42)
@@ -174,7 +202,7 @@ nrows = 3
 ncols = 3
 for index, sample in enumerate(test_samples):
     # Subplot for each plost
-    plt.subplot(nrows, ncols, index+1)
+    plt.subplot(nrows, ncols, index + 1)
 
     # Plot target image
     plt.imshow(sample.squeeze(dim=0), cmap="gray")
@@ -190,9 +218,9 @@ for index, sample in enumerate(test_samples):
 
     # Compare equality between pred and truth and change color of title text
     if pred_label == truth_label:
-        plt.title(title_text, fontsize=10, c="g") # green, means good prediction
+        plt.title(title_text, fontsize=10, c="g")  # green, means good prediction
     else:
-        plt.title(title_text, fontsize=10, c="r") # green, means good prediction
+        plt.title(title_text, fontsize=10, c="r")  # green, means good prediction
     plt.axis(False)
 
 plt.savefig(
@@ -230,6 +258,23 @@ with torch.inference_mode():
 
 # Concatenate list of predictions into a tensor
 y_preds_tensor = torch.cat(y_preds)
-print(y_preds_tensor[:10])
+print(len(y_preds_tensor))
 
+# 2. Setup confusion matrix instance and compare predictions to targets
+confusion_matrix_calculator = torchmetrics.ConfusionMatrix(
+    task="multiclass",
+    num_classes=len(class_names),
+)
 
+confusion_matrix_tensor = confusion_matrix_calculator(
+    preds=y_preds_tensor, target=test_data.targets
+)
+print(confusion_matrix_tensor)
+
+# 3. Plot the confusion matrix
+fig, ax = plot_confusion_matrix(
+    conf_mat=confusion_matrix_tensor.numpy(), class_names=class_names, figsize=(10, 7)
+)
+plt.savefig(
+    "lessons/section5_pytorch_computer_vision/src/d_line_279_plot_confusion_matrix.png"
+)

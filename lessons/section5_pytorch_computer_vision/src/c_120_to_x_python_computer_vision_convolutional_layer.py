@@ -335,7 +335,7 @@ for epoch in tqdm(range(epochs)):
         loss_fn=loss_fn,
         optimizer=optimizer,
         accruacy_fn=accuracy_fn,
-        device=device
+        device=device,
     )
 
     test_step(
@@ -377,6 +377,7 @@ To reload a state_dict you must:
   4. Call model.eval() so dropout/batchnorm behave correctly during inference.
 """
 
+
 # --- Re-define model_0 architecture (from section5/src/a_103_...) ---
 # Baseline: Flatten → Linear → Linear  (no activation, no conv)
 class FashionMNISTModelV0(nn.Module):
@@ -416,8 +417,12 @@ MODEL_1_PATH = MODEL_PATH / "section5_model_1_fashionMNIST.pth"
 
 # --- Instantiate with the same constructor args used during training ---
 # FashionMNIST images are 28×28 = 784 pixels; 10 classes
-model_0 = FashionMNISTModelV0(input_shape=784, hidden_units=10, output_shape=len(class_name))
-model_1 = FashionMNISTModelV1(input_shape=784, hidden_units=10, output_shape=len(class_name))
+model_0 = FashionMNISTModelV0(
+    input_shape=784, hidden_units=10, output_shape=len(class_name)
+)
+model_1 = FashionMNISTModelV1(
+    input_shape=784, hidden_units=10, output_shape=len(class_name)
+)
 
 # --- Load state dicts ---
 # weights_only=True is recommended (avoids arbitrary code execution from pickle)
@@ -447,7 +452,11 @@ model_1_result = evaluate_model(
 
 # --- Side-by-side comparison ---
 compare_results = pd.DataFrame([model_0_result, model_1_result, model_2_result])
-compare_results["training_time"] = [4.090, 3.087, total_train_time_model_2] # model_0 1 time is copied from other files
+compare_results["training_time"] = [
+    4.090,
+    3.087,
+    total_train_time_model_2,
+]  # model_0 1 time is copied from other files
 print("\nModel comparison:")
 print(compare_results)
 """
@@ -480,6 +489,8 @@ Reasons:
 """
 MODEL_2_SAVE_PATH = MODEL_PATH / "section5_model_2_fashionMNIST.pth"
 # MODEL_PATH already defined above as Path("lessons/section5_pytorch_computer_vision/models")
-MODEL_PATH.mkdir(parents=True, exist_ok=True)  # create the directory if it doesn't exist yet
+MODEL_PATH.mkdir(
+    parents=True, exist_ok=True
+)  # create the directory if it doesn't exist yet
 torch.save(obj=model_2.state_dict(), f=MODEL_2_SAVE_PATH)
 print(f"Model 2 saved to: {MODEL_2_SAVE_PATH}")
