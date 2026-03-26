@@ -77,11 +77,13 @@ so target_transform=None is the correct choice for standard classification.
 # --- Define a one-hot encoding transform ---
 NUM_CLASSES = 10  # MNIST digits 0-9
 
+
 def one_hot_encode(label: int) -> torch.Tensor:
     """Convert integer class index to a one-hot float tensor."""
     target = torch.zeros(NUM_CLASSES)
     target[label] = 1.0
     return target
+
 
 # --- Dataset WITHOUT target_transform ---
 train_data_no_transform = datasets.MNIST(
@@ -107,7 +109,9 @@ image_hot, label_hot = train_data_one_hot[0]
 
 print("=== target_transform comparison (same image, index 0) ===")
 print(f"Without target_transform: label = {label_raw!r:>5}  | type = {type(label_raw)}")
-print(f"With    target_transform: label = {label_hot}  | type = {type(label_hot)} | shape = {label_hot.shape}")
+print(
+    f"With    target_transform: label = {label_hot}  | type = {type(label_hot)} | shape = {label_hot.shape}"
+)
 # Sample output:
 # Without target_transform: label =     5  | type = <class 'int'>
 # With    target_transform: label = tensor([0., 0., 0., 0., 0., 1., 0., 0., 0., 0.])  | type = <class 'torch.Tensor'> | shape = torch.Size([10])
@@ -122,7 +126,7 @@ fig = plt.figure(figsize=(9, 9))
 row, column = 4, 4
 
 torch.manual_seed(42)
-for i in range(1, row*column + 1):
+for i in range(1, row * column + 1):
     image_index = torch.randint(low=0, high=len(train_data), size=(1,)).item()
     image_to_plot, label_to_plot = train_data[int(image_index)]
     fig.add_subplot(row, column, i)
