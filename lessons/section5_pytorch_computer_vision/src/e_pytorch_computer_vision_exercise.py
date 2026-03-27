@@ -137,3 +137,112 @@ for i in range(1, row * column + 1):
 plt.savefig(
     "lessons/section5_pytorch_computer_vision/src/e_line_130_sample_MNIST_figure.png"
 )
+
+"""
+7. Turn the MNIST train and test datasets into dataloaders 
+   using torch.utils.data.DataLoader, set the batch_size=32.
+"""
+BATCH_SIZE = 32
+# dataloader is an iterable over the dataset, it will yield batches of data when iterated over
+# each element of the dataloader is a list of two elements: [batch of images, batch of labels]
+train_dataloader = torch.utils.data.DataLoader(
+    dataset=train_data,
+    batch_size=BATCH_SIZE,
+    shuffle=True,
+)
+
+test_dataloader = torch.utils.data.DataLoader(
+    dataset=test_data,
+    batch_size=BATCH_SIZE,
+    shuffle=False,
+)
+print(f"Type of train_dataloader is type {type(train_dataloader)}")
+# print(f"Type of train_dataloader element is {type(next(iter(train_dataloader)))}")
+a_image_batch, a_lable_batch = next(iter(train_dataloader))
+print(f"a_image_batch shape is {a_image_batch.shape}")
+print(f"a_lable_batch shape is {a_lable_batch.shape}")
+
+"""
+8. Recreate model_2 used in this notebook (the same model from the CNN Explainer website, 
+   also known as TinyVGG) capable of fitting on the MNIST dataset.
+"""
+
+
+class TinyVGG(nn.Module):
+    def __init__(self, in_features: int, hidden_units: int, out_features: int) -> None:
+        super().__init__()
+        self.conv_stack_1 = nn.Sequential(
+            nn.Conv2d(
+                in_channels=in_features,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+        )
+
+        self.conv_stack_2 = nn.Sequential(
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+        )
+
+        # --- Calculate in_features dynamically via a dummy forward pass ---
+        # Best practice: instead of hardcoding the flattened size (which breaks
+        # whenever you change kernel_size, padding, or input resolution),
+        # run a zero tensor through the conv stacks to let PyTorch compute the
+        # output shape for us automatically.
+        # torch.no_grad(): skip gradient tracking — this is just a shape probe.
+        with torch.no_grad():
+            dummy = torch.zeros(1, in_features, 28, 28)  # [batch=1, C, H, W]
+            dummy = self.conv_stack_2(self.conv_stack_1(dummy))
+            # dummy shape after both conv stacks: [1, hidden_units, H_out, W_out]
+            linear_in_features = dummy.flatten(start_dim=1).shape[1]
+            # flatten(start_dim=1): collapse all dims except batch → [1, hidden_units*H_out*W_out]
+
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(
+                in_features=linear_in_features,  # auto-computed above
+                out_features=out_features,
+            ),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.classifier(self.conv_stack_2(self.conv_stack_1(x)))
+
+my_tinyvgg = TinyVGG(
+    in_features=1,
+    hidden_units=10,
+    out_features=len(class_name),
+)
+
+my_tinyvgg.eval()
+with torch.inference_mode():
+    test_tensor = torch.zeros(1, 1, 28, 28)
+    test_output = my_tinyvgg(test_tensor)
+    print(f"test_output shape is {test_output.shape}")
