@@ -8,7 +8,7 @@ def evaluate_model(
     data_loader: torch.utils.data.DataLoader,
     loss_fn: torch.nn.Module,
     accuracy_fn: Callable[[torch.Tensor, torch.Tensor], float],
-    device: torch.device,
+    device: torch.device | str,
 ) -> dict[str, str | float]:
     """
     Evaluates a model on a given data_loader and returns loss and accuracy metrics.
@@ -57,7 +57,7 @@ def train_step(
     loss_fn: nn.Module,
     optimizer: torch.optim.Optimizer,
     accruacy_fn: Callable[[torch.Tensor, torch.Tensor], float],
-    device: torch.device,
+    device: torch.device | str,
 ):
     """
     Performs one epoch of training on the given data_loader.
@@ -112,7 +112,7 @@ def test_step(
     data_loader: torch.utils.data.DataLoader,
     loss_fn: nn.Module,
     accuracy_fn: Callable[[torch.Tensor, torch.Tensor], float],
-    device: torch.device,
+    device: torch.device | str,
 ):
     """
     Performs one epoch of evaluation on the given data_loader.

@@ -4,7 +4,17 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from torchvision.transforms import ToTensor
 
+from timeit import default_timer
+from tqdm.auto import tqdm
+
 import matplotlib.pyplot as plt
+
+from lessons.section5_pytorch_computer_vision.common.common import (
+    train_step,
+    test_step,
+    evaluate_model,
+)
+from common.helper_fucntion import accuracy_fn, print_train_time
 
 """
 1. What are 3 areas in industry where computer vision is currently being used?
@@ -235,14 +245,66 @@ class TinyVGG(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.classifier(self.conv_stack_2(self.conv_stack_1(x)))
 
-my_tinyvgg = TinyVGG(
+
+# torch.manual_seed(42)
+my_tinyvgg_cpu = TinyVGG(
     in_features=1,
     hidden_units=10,
     out_features=len(class_name),
 )
 
-my_tinyvgg.eval()
+my_tinyvgg_cpu.eval()
 with torch.inference_mode():
     test_tensor = torch.zeros(1, 1, 28, 28)
-    test_output = my_tinyvgg(test_tensor)
+    test_output = my_tinyvgg_cpu(test_tensor)
     print(f"test_output shape is {test_output.shape}")
+
+"""
+9. Train the model you built in exercise 8. 
+on CPU and GPU and see how long it takes on each.
+"""
+# 9.1 first train on cpu
+loss_fn = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(
+    params=my_tinyvgg_cpu.parameters(),
+    lr=0.1,
+)
+
+EPOCHS = 3
+train_start_time = default_timer()
+for epoch in tqdm(range(EPOCHS)):
+    train_step(
+        model=my_tinyvgg_cpu,
+        data_loader=train_dataloader,
+        loss_fn=loss_fn,
+        optimizer=optimizer,
+        accruacy_fn=accuracy_fn,
+        device="cpu",
+    )
+
+    test_step(
+        model=my_tinyvgg_cpu,
+        data_loader=test_dataloader,
+        loss_fn=loss_fn,
+        accuracy_fn=accuracy_fn,
+        device="cpu",
+    )
+train_end_time = default_timer()
+
+print_train_time(start=train_start_time, end=train_end_time, device="cpu")
+
+my_tinyvgg_cpu_result = evaluate_model(
+    model=my_tinyvgg_cpu,
+    data_loader=test_dataloader,
+    loss_fn=loss_fn,
+    accuracy_fn=accuracy_fn,
+    device="cpu",
+)
+
+print(my_tinyvgg_cpu_result)
+
+"""
+Sample output:
+Train time on cpu: 11.265 seconds
+{'model_name': 'TinyVGG', 'model_loss': 0.04679973050951958, 'model_accuracy': 98.41253993610223}
+"""
