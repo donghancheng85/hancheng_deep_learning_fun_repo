@@ -1,19 +1,48 @@
 import torch
 from torch import nn
+from torch.utils.data import DataLoader
+from typing import Callable
+
+from timeit import default_timer
+import time
+from tqdm.auto import tqdm
+from pathlib import Path
+
+import torchvision
 from torchvision import datasets
+from torchvision import transforms
 from torchvision.transforms import ToTensor
+
 import torchmetrics
-
-import pathlib
-
-from mlxtend.plotting import plot_confusion_matrix
 
 import matplotlib.pyplot as plt
 
 from common.device import get_best_device, print_device_info
 
-# prepare the data for inference/prediction
-test_data = datasets.MNIST(
+from lessons.section5_pytorch_computer_vision.common.common import (
+    train_step,
+    test_step,
+    evaluate_model,
+)
+from common.helper_fucntion import accuracy_fn, print_train_time
+
+"""
+13. Use a model similar to the trained model_2 from this notebook to make predictions on the test torchvision.datasets.FashionMNIST dataset.
+    Then plot some predictions where the model was wrong alongside what the label of the image should've been.
+    After visualizing these predictions do you think it's more of a modelling error or a data error?
+    As in, could the model do better or are the labels of the data too close to each other (e.g. a "Shirt" label is too close to "T-shirt/top")?
+"""
+
+# Load data
+train_data = datasets.FashionMNIST(
+    root="lessons/section5_pytorch_computer_vision/data",  # where to download data to
+    train=True,  # do we want the training dataset?
+    download=False,  # do we want to download
+    transform=ToTensor(),  # how do we want to transform the data
+    target_transform=None,  # how do we want to transform the labels/targets
+)
+
+test_data = datasets.FashionMNIST(
     root="lessons/section5_pytorch_computer_vision/data",
     train=False,
     download=False,
@@ -21,18 +50,26 @@ test_data = datasets.MNIST(
     target_transform=None,
 )
 
-class_name = test_data.classes
+class_name = train_data.classes
 print(f"class names are: {class_name}")
 
+# Convert to Dataloader
 BATCH_SIZE = 32
+train_dataloader = DataLoader(
+    dataset=train_data,
+    batch_size=BATCH_SIZE,
+    shuffle=True,
+)
 
-test_dataloader = torch.utils.data.DataLoader(
+# No need to shuffle test data, it will not be used in training
+test_dataloader = DataLoader(
     dataset=test_data,
     batch_size=BATCH_SIZE,
     shuffle=False,
 )
 
 
+# Recreate the TinyVGG model
 class TinyVGG(nn.Module):
     def __init__(self, in_features: int, hidden_units: int, out_features: int) -> None:
         super().__init__()
@@ -101,46 +138,73 @@ class TinyVGG(nn.Module):
         return self.classifier(self.conv_stack_2(self.conv_stack_1(x)))
 
 
-"""
-10. Make predictions using your trained model and visualize 
-    at least 5 of them comparing the prediction to the target label.
-"""
 device = get_best_device()
 print_device_info(device)
 
-my_tinyvgg_gpu_inference = TinyVGG(
+my_tinyvgg_fashionmnist_gpu = TinyVGG(
     in_features=1,
     hidden_units=10,
     out_features=len(class_name),
-)
+).to(device=device)
 
 loss_fn = torch.nn.CrossEntropyLoss()
-
-# load the model trained in f_pytorch_computer_vision_exercise_gpu.py
-MODEL_PATH = pathlib.Path("lessons/section5_pytorch_computer_vision/models")
-MODEL_TINYVGG_MNIST_PATH = MODEL_PATH / "section5_model_tinyvgg_mnist.pth"
-
-my_tinyvgg_gpu_inference.load_state_dict(
-    torch.load(f=MODEL_TINYVGG_MNIST_PATH, weights_only=True)
+optimizer = torch.optim.SGD(
+    params=my_tinyvgg_fashionmnist_gpu.parameters(),
+    lr=0.1,
 )
-my_tinyvgg_gpu_inference.to(device=device)
 
-# Make predictions and get the prediction label
-prediction_labels: list[torch.Tensor] = []
+EPOCHS = 6
+train_start_time = default_timer()
+for epoch in tqdm(range(EPOCHS)):
+    train_step(
+        model=my_tinyvgg_fashionmnist_gpu,
+        data_loader=train_dataloader,
+        loss_fn=loss_fn,
+        optimizer=optimizer,
+        accruacy_fn=accuracy_fn,
+        device=device,
+    )
 
-my_tinyvgg_gpu_inference.eval()
+    test_step(
+        model=my_tinyvgg_fashionmnist_gpu,
+        data_loader=test_dataloader,
+        loss_fn=loss_fn,
+        accuracy_fn=accuracy_fn,
+        device=device,
+    )
+train_end_time = default_timer()
+
+print_train_time(start=train_start_time, end=train_end_time, device=device)
+
+my_tinyvgg_fashionmnist_gpu_result = evaluate_model(
+    model=my_tinyvgg_fashionmnist_gpu,
+    data_loader=test_dataloader,
+    loss_fn=loss_fn,
+    accuracy_fn=accuracy_fn,
+    device=device,
+)
+print(my_tinyvgg_fashionmnist_gpu_result)
+
+# Collect all predictions and true labels across the entire test set
+all_pred_labels: list[torch.Tensor] = []
+all_true_labels: list[torch.Tensor] = []
+
+my_tinyvgg_fashionmnist_gpu.eval()
 with torch.inference_mode():
     for X, y in test_dataloader:
         X, y = X.to(device), y.to(device)
+        y_logits = my_tinyvgg_fashionmnist_gpu(X)
+        all_pred_labels.append(y_logits.argmax(dim=1).cpu())
+        all_true_labels.append(y.cpu())
 
-        # Logits and prediction labels
-        y_logits: torch.Tensor = my_tinyvgg_gpu_inference(X)
-        y_prediction_labels_batch = y_logits.argmax(dim=1)
-        prediction_labels.append(y_prediction_labels_batch.cpu())
+pred_labels_tensor = torch.cat(all_pred_labels, dim=0)  # [10000]
+true_labels_tensor = torch.cat(all_true_labels, dim=0)  # [10000]
 
-print(f"prediction_labels[0] shape: {prediction_labels[0].shape}")
-prediction_labels_tensor = torch.cat(prediction_labels, dim=0)
-print(prediction_labels_tensor[:10])
+# Find the indexes where prediction is wrong
+# wrong_indexes: 1D tensor of indexes into test_data where model made a mistake
+wrong_indexes = (pred_labels_tensor != true_labels_tensor).nonzero(as_tuple=True)[0]
+print(f"Total wrong predictions: {len(wrong_indexes)} / {len(test_data)}")
+print(f"First 10 wrong indexes: {wrong_indexes[:10]}")
 
 # Plot prediction and compare with origin
 plt.figure(figsize=(12, 12))
@@ -149,11 +213,14 @@ ncolunms = 5
 for index in range(nrows * ncolunms):
     plt.subplot(nrows, ncolunms, index + 1)
 
-    # get a random index of image and plot its true and prediction class name
-    image_rand_index = torch.randint(low=0, high=len(test_data), size=(1,)).item()
+    # get a random position into wrong_indexes, then look up the actual test_data index
+    rand_pos = torch.randint(low=0, high=len(wrong_indexes), size=(1,)).item()
+    actual_idx = wrong_indexes[int(rand_pos)].item()  # index into test_data
 
-    raw_image, raw_label = test_data[int(image_rand_index)]
-    prediction_label = prediction_labels_tensor[int(image_rand_index)]
+    raw_image, raw_label = test_data[int(actual_idx)]
+    prediction_label = pred_labels_tensor[
+        int(actual_idx)
+    ]  # predicted class label (int)
 
     true_class_name = class_name[raw_label]
     prediction_class_name = class_name[prediction_label]
@@ -171,24 +238,5 @@ for index in range(nrows * ncolunms):
 
 plt.tight_layout()
 plt.savefig(
-    "lessons/section5_pytorch_computer_vision/src/g_line_173_visualize_random_predictions.png"
-)
-
-"""
-11. Plot a confusion matrix comparing your model's predictions to the truth labels.
-"""
-confusion_matrix_calculator = torchmetrics.ConfusionMatrix(
-    task="multiclass", num_classes=len(class_name)
-)
-
-confusion_matrix = confusion_matrix_calculator(
-    preds=prediction_labels_tensor, target=test_data.targets
-)
-
-fig, ax = plot_confusion_matrix(
-    conf_mat=confusion_matrix.numpy(), class_names=class_name, figsize=(10, 7)
-)
-plt.tight_layout()
-plt.savefig(
-    "lessons/section5_pytorch_computer_vision/src/g_line_192_plot_confusion_matrix.png"
+    "lessons/section5_pytorch_computer_vision/src/i_line_241_visualize_random_wrong_predictions.png"
 )
