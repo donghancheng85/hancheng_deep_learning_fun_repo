@@ -1,24 +1,15 @@
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
+from torchvision import datasets
 from torchvision.transforms import ToTensor
 import torchmetrics
 
-from timeit import default_timer
-from tqdm.auto import tqdm
 import pathlib
 
 from mlxtend.plotting import plot_confusion_matrix
 
 import matplotlib.pyplot as plt
 
-from lessons.section5_pytorch_computer_vision.common.common import (
-    train_step,
-    test_step,
-    evaluate_model,
-)
-from common.helper_fucntion import accuracy_fn, print_train_time
 from common.device import get_best_device, print_device_info
 
 # prepare the data for inference/prediction
