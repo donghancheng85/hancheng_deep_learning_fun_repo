@@ -13,6 +13,7 @@ import random
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 """
 How we want to get our own data to PyTorch
@@ -230,4 +231,51 @@ print(f"Class name to index mapping: {class_dict}")
 print(f"Number of training samples: {len(train_data)}")
 print(f"Number of testing samples: {len(test_data)}")
 
+# index on the train_data to get a sample
+image, label = train_data[0]
+print(
+    f"Image shape: {image.shape} | Label: {label} | Class name: {class_name[label]} | data type: {image.dtype} | label data type: {type(label)}"
+)
 
+# Using matplotlib to visualize the image and its label, first rearrange the image from [C, H, W] to [H, W, C] for matplotlib
+image_permute = image.permute(1, 2, 0)
+print(
+    f"Original image shape: {image.shape} -> [C, H, W] | Permuted image shape: {image_permute.shape} -> [H, W, C]"
+)
+plt.figure(figsize=(6, 6))
+plt.imshow(image_permute)
+plt.axis(False)
+plt.title(f"Class: {class_name[label]} | Shape: {image.shape} -> [C, H, W]")
+plt.tight_layout()
+plt.savefig(
+    "lessons/section6_pytorch_custom_datasets/src/a_line_249_visualize_image_from_imagefolder.png"
+)
+
+"""
+4.1 Turn ImageFolder dataset into DataLoader for training
+"""
+# Trun ImageFolder dataset into DataLoader
+BATCH_SIZE = 1
+train_dataloader = DataLoader(
+    dataset=train_data,
+    batch_size=BATCH_SIZE,
+    shuffle=True,  # shuffle the data for training
+    num_workers=1,  # use all available CPU cores for data loading
+    pin_memory=True,  # pin memory for faster data transfer to GPU
+)
+test_dataloader = DataLoader(
+    dataset=test_data,
+    batch_size=BATCH_SIZE,
+    num_workers=1,
+    shuffle=False,  # no need to shuffle test data, it will not be used in training
+)
+
+# Check the dataloader
+print(f"Number of batches in train dataloader: {len(train_dataloader)}")
+print(f"Number of batches in test dataloader: {len(test_dataloader)}")
+image_batch, label_batch = next(iter(train_dataloader))
+
+# Batch size of 1
+print(
+    f"Image batch shape: {image_batch.shape} -> [batch_size, channels, height, width] | Label batch shape: {label_batch.shape} -> [batch_size]"
+)  # Image batch shape: torch.Size([1, 3, 64, 64]) | Label batch shape: torch.Size([1]  )
