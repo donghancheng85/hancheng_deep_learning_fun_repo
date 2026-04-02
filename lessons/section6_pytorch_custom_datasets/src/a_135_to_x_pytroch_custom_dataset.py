@@ -229,3 +229,5 @@ print(f"Class name to index mapping: {class_dict}")
 # Check the lenght of datasets
 print(f"Number of training samples: {len(train_data)}")
 print(f"Number of testing samples: {len(test_data)}")
+
+
