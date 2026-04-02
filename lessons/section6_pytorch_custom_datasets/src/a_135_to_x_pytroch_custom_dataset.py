@@ -135,11 +135,15 @@ Steps:
 
 """
 3.1 Tranforming data with torchvision.transforms
+
+Transforms help us transform our data into a format which is ready for PyTorch to process and data augmentation
 """
 # Write a transform for image
 data_transform = transforms.Compose(
     [
-        transforms.Resize((64, 64)),  # resize all images to 64x64
+        transforms.Resize(
+            (64, 64)
+        ),  # resize all images to 64x64, this is a hyperparameter you can change
         transforms.RandomHorizontalFlip(
             p=0.5
         ),  # data augmentation, randomly flip some images horizontally
@@ -152,3 +156,76 @@ assert isinstance(transformed, torch.Tensor)
 print(
     f"Transformed image shape: {transformed.shape}"
 )  # -> torch.Size([3, 64, 64]) = [C, H, W]
+
+
+def plot_transformed_image(image_paths, transform, n=3, seed=None):
+    """
+    Plot n random images in a single figure with 2 columns:
+      - Left column: original image
+      - Right column: transformed image
+    """
+    if seed:
+        random.seed(seed)
+    random_image_paths = random.sample(image_paths, k=n)
+
+    fig, axes = plt.subplots(nrows=n, ncols=2, figsize=(8, n * 3))
+
+    for row, image_path in enumerate(random_image_paths):
+        with Image.open(image_path) as f:
+            class_name = image_path.parent.stem
+
+            # Left: original image
+            axes[row, 0].imshow(f)
+            axes[row, 0].set_title(f"Original | {class_name}\nSize: {f.size}")
+            axes[row, 0].axis(False)
+
+            # Right: transformed image
+            # transform returns [C, H, W] tensor; permute to [H, W, C] for matplotlib
+            transformed_image = transform(f)
+            assert isinstance(transformed_image, torch.Tensor)
+            axes[row, 1].imshow(transformed_image.permute(1, 2, 0))
+            axes[row, 1].set_title(
+                f"Transformed | {class_name}\nShape: {transformed_image.shape}"
+            )
+            axes[row, 1].axis(False)
+
+
+plot_transformed_image(
+    image_paths=image_path_list, transform=data_transform, n=3, seed=42
+)
+plt.tight_layout()
+plt.savefig(
+    "lessons/section6_pytorch_custom_datasets/src/a_line_190_transformed_images.png"
+)
+
+"""
+4. Option 1: Loading image data using ImageFolder, it is a pre-built dataset for 
+   loading image data with a standard structure (class folders with images inside)
+
+   We can load image classification data with torchvision.datasets.ImageFolder
+"""
+
+# Use ImageFolder to load the data
+train_data = datasets.ImageFolder(
+    root=train_dir,
+    transform=data_transform,  # apply the transform we created to each image when loading
+    target_transform=None,  # we can also apply a transform to the target labels if we want, but we'll leave it as is for now
+)
+test_data = datasets.ImageFolder(
+    root=test_dir,
+    transform=data_transform,  # apply the transform we created to each image when loading
+)
+print(f"\nNumber of training samples: {len(train_data)}")
+
+# Get the class names from the training data
+class_name = train_data.classes
+print(f"Class names: {class_name}")
+
+# Get class name as dict
+class_dict = train_data.class_to_idx
+print(f"Class name to index mapping: {class_dict}")
+# Class name to index mapping: {'pizza': 0, 'steak': 1, 'sushi': 2}
+
+# Check the lenght of datasets
+print(f"Number of training samples: {len(train_data)}")
+print(f"Number of testing samples: {len(test_data)}")
