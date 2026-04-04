@@ -25,4 +25,5 @@ pyyaml
 black
 torchmetrics
 torchviz
+torchinfo
 mlxtend

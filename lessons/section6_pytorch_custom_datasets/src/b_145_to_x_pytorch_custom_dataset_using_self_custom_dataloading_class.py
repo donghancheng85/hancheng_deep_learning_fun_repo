@@ -317,4 +317,78 @@ print(f"Number of batches in test dataloader: {len(test_dataloader_custom)}")
 
 # Get image and label from dataloader
 image_batch, label_batch = next(iter(train_dataloader_custom))
-print(f"Image batch shape: {image_batch.shape} | Label batch shape: {label_batch.shape}")
+print(
+    f"Image batch shape: {image_batch.shape} | Label batch shape: {label_batch.shape}"
+)
+
+
+"""
+6. Other forms of transforms (data augmentation and normalization)
+
+Looks at one type of augmentation to train PyTorch vision model
+"""
+# Look at trivial augmentation
+train_trivial_augmentation = v2.Compose(
+    [
+        v2.Resize(size=(224, 224)),
+        v2.TrivialAugmentWide(
+            num_magnitude_bins=5
+        ),  # apply a random augmentation to the image (from a list of 5 augmentations)
+        v2.ToImage(),  # PIL Image → uint8 tensor [C, H, W]
+        v2.ToDtype(torch.float32, scale=True),  # uint8 [0, 255] → float32 [0.0, 1.0]
+    ]
+)
+
+test_trivial_augmentation = v2.Compose(
+    [
+        v2.Resize(size=(224, 224)),
+        v2.ToImage(),  # PIL Image → uint8 tensor [C, H, W]
+        v2.ToDtype(torch.float32, scale=True),  # uint8 [0, 255] → float32 [0.0, 1.0]
+    ]
+)
+
+# Get all image paths
+image_paths_list = list(image_path.glob("*/*/*.jpg"))
+print(f"Total number of images: {len(image_paths_list)}")
+
+
+# Plot random transformed images
+def plot_transformed_image(image_paths, transform, n=3, seed=None):
+    """
+    Plot n random images in a single figure with 2 columns:
+      - Left column: original image
+      - Right column: transformed image
+    """
+    if seed:
+        random.seed(seed)
+    random_image_paths = random.sample(image_paths, k=n)
+
+    fig, axes = plt.subplots(nrows=n, ncols=2, figsize=(8, n * 3))
+
+    for row, image_path in enumerate(random_image_paths):
+        with Image.open(image_path) as f:
+            class_name = image_path.parent.stem
+
+            # Left: original image
+            axes[row, 0].imshow(f)
+            axes[row, 0].set_title(f"Original | {class_name}\nSize: {f.size}")
+            axes[row, 0].axis(False)
+
+            # Right: transformed image
+            # transform returns [C, H, W] tensor; permute to [H, W, C] for matplotlib
+            transformed_image = transform(f)
+            assert isinstance(transformed_image, torch.Tensor)
+            axes[row, 1].imshow(transformed_image.permute(1, 2, 0))
+            axes[row, 1].set_title(
+                f"Transformed | {class_name}\nShape: {transformed_image.shape}"
+            )
+            axes[row, 1].axis(False)
+
+
+plot_transformed_image(
+    image_paths=image_paths_list, transform=train_trivial_augmentation, n=3, seed=42
+)
+plt.tight_layout()
+plt.savefig(
+    "lessons/section6_pytorch_custom_datasets/src/a_line_385_trivial_augmentation_transformed_images.png"
+)
