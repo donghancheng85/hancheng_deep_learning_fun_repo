@@ -207,7 +207,9 @@ class TinyVGG(nn.Module):
 
 
 torch.manual_seed(42)
-model_0 = TinyVGG(in_features=3, hidden_units=10, out_features=len(class_names)).to(device)
+model_0 = TinyVGG(in_features=3, hidden_units=10, out_features=len(class_names)).to(
+    device
+)
 print(model_0)
 
 """
