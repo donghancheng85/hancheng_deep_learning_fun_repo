@@ -6,6 +6,11 @@ from torchvision.transforms import v2
 import torchinfo
 
 from common.device import get_best_device, print_device_info
+from common.helper_fucntion import accuracy_fn, print_train_time
+from lessons.section6_pytorch_custom_datasets.common.common import (
+    train,
+    plot_loss_curves,
+)
 
 from typing import Tuple, Dict, List
 from pathlib import Path
@@ -13,6 +18,8 @@ import pathlib
 import os
 import random
 from PIL import Image
+from timeit import default_timer
+import matplotlib.pyplot as plt
 
 """
 0. Setting up device-agnostic code
@@ -217,3 +224,62 @@ print(model_0)
     (note: torchinfo is a third-party library, install via pip install torchinfo)
 """
 torchinfo.summary(model_0, input_size=(1, 3, 64, 64))
+
+"""
+7.5 Create train and test step functions, can be found in common/common.py under train_step() and test_step()
+"""
+"""
+7.6 Create a train function to combine train_step() and test_step() for multiple epochs, can be found in common/common.py under train()
+"""
+
+"""
+7.7 Train and evaluate model_0 on the simple dataset (no augmentation)
+"""
+# set the random seeds for reproducibility, note: just for testing purposes, not best practice for real training
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
+
+# Set epochs and optimizer
+_NUM_EPOCHS = 10
+
+# Recreate an instance of TinyVGG
+model_0 = TinyVGG(
+    in_features=3, hidden_units=10, out_features=len(train_data_simple.classes)
+).to(device)
+
+# Loss and optimizer
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model_0.parameters(), lr=0.001)
+
+# Start time
+train_start_time = default_timer()
+
+# Train the model
+model_0_result = train(
+    model=model_0,
+    train_data_loader=train_dataloader_simple,
+    test_data_loader=test_dataloader_simple,
+    loss_fn=loss_fn,
+    optimizer=optimizer,
+    accuracy_fn=accuracy_fn,
+    device=device,
+    epochs=_NUM_EPOCHS,
+)
+
+# End time
+train_end_time = default_timer()
+print(f"Training time: {train_end_time - train_start_time:.2f} seconds")
+print(model_0_result)
+
+"""
+7.8 Plot the loss curves of model_0
+ A loss curve is a plot of the training and test loss values across epochs. 
+ It can be used to identify when a model is underfitting (high loss), 
+ overfitting (training loss much lower than test loss), or just right (training and test loss decrease together).
+"""
+
+plot_loss_curves(model_0_result)
+plt.tight_layout()
+plt.savefig(
+    "lessons/section6_pytorch_custom_datasets/src/c_line_297_model_0_loss_curves.png"
+)
