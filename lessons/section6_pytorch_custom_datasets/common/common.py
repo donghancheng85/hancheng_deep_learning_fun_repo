@@ -183,7 +183,7 @@ def train(
             (y_true, y_pred) tensors and returns an accuracy value.
         device (torch.device): The device to move data to before computation.
         epochs (int): Number of epochs to train and test for.
-
+        scheduler (torch.optim.lr_scheduler._LRScheduler | None): Learning rate scheduler to update the learning rate during training.
     Returns:
         dict[str, list[float] | str]: A dictionary with keys:
             - "model_name": name of the model class
@@ -219,6 +219,10 @@ def train(
         print(f"Epoch {epoch} metrics:")
         print(f"Train loss: {train_loss:.5f}, Train accuracy: {train_accuracy:.4f}%")
         print(f"Test loss: {test_loss:.5f}, Test accuracy: {test_accuracy:.4f}%")
+
+        # Step the scheduler if provided
+        if scheduler is not None:
+            scheduler.step()
 
         # Append metrics for this epoch
         train_loss_values.append(train_loss)
