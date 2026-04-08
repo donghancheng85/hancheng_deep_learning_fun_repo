@@ -168,6 +168,7 @@ def train(
     accuracy_fn: Callable[[torch.Tensor, torch.Tensor], float],
     loss_fn: torch.nn.Module = nn.CrossEntropyLoss(),
     epochs: int = 5,
+    scheduler: torch.optim.lr_scheduler._LRScheduler | None = None,
 ) -> dict[str, list[float] | str]:
     """
     Trains and tests a PyTorch model for a number of epochs.
@@ -265,3 +266,76 @@ def plot_loss_curves(results: dict[str, list[float] | str]) -> None:
     plt.title(f"Accuracy Curves for {results['model_name']}")
     plt.legend()
     plt.grid()
+
+
+class TinyVGG(nn.Module):
+    """A TinyVGG model for image classification.
+    Will be used to train on the custom dataset created in this section."""
+
+    def __init__(self, in_features: int, hidden_units: int, out_features: int) -> None:
+        super().__init__()
+        self.conv_stack_1 = nn.Sequential(
+            nn.Conv2d(
+                in_channels=in_features,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=0,
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=0,
+            ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+        )
+
+        self.conv_stack_2 = nn.Sequential(
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=0,
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=hidden_units,
+                out_channels=hidden_units,
+                kernel_size=3,
+                stride=1,
+                padding=0,
+            ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+        )
+
+        # --- Calculate in_features dynamically via a dummy forward pass ---
+        # Best practice: instead of hardcoding the flattened size (which breaks
+        # whenever you change kernel_size, padding, or input resolution),
+        # run a zero tensor through the conv stacks to let PyTorch compute the
+        # output shape for us automatically.
+        # torch.no_grad(): skip gradient tracking — this is just a shape probe.
+        with torch.no_grad():
+            dummy = torch.zeros(
+                1, in_features, 64, 64
+            )  # [batch=1, C, H, W] — matches Resize(64,64) in transform
+            dummy = self.conv_stack_2(self.conv_stack_1(dummy))
+            # dummy shape after both conv stacks: [1, hidden_units, H_out, W_out]
+            linear_in_features = dummy.flatten(start_dim=1).shape[1]
+            # flatten(start_dim=1): collapse all dims except batch → [1, hidden_units*H_out*W_out]
+
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(
+                in_features=linear_in_features,  # auto-computed above
+                out_features=out_features,
+            ),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.classifier(self.conv_stack_2(self.conv_stack_1(x)))

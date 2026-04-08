@@ -283,3 +283,11 @@ plt.tight_layout()
 plt.savefig(
     "lessons/section6_pytorch_custom_datasets/src/c_line_297_model_0_loss_curves.png"
 )
+
+"""
+8. What should be ideal loss curve look like?
+- Both training and test loss should decrease over time.
+- If training loss decreases but test loss plateaus or increases, it may indicate overfitting.
+- If both training and test loss are high and don't decrease, it may indicate underfitting.
+- The ideal loss curve is one where both training and test loss decrease and eventually plateau at a low value, indicating good generalization to unseen data.  
+"""
