@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
 from torchvision.transforms import v2
 import torchinfo
+import json
 
 from common.device import get_best_device, print_device_info
 from common.helper_fucntion import accuracy_fn, print_train_time
@@ -283,6 +284,25 @@ plt.tight_layout()
 plt.savefig(
     "lessons/section6_pytorch_custom_datasets/src/c_line_297_model_0_loss_curves.png"
 )
+
+"""
+7.9 Save model_0 weights and training results for use in comparison files
+"""
+
+# Directory to persist artefacts
+_SAVE_DIR = Path("lessons/section6_pytorch_custom_datasets/src")
+_SAVE_DIR.mkdir(parents=True, exist_ok=True)
+
+# Save model state dict (weights only — portable across scripts)
+_MODEL_PATH = _SAVE_DIR / "c_model_0.pth"
+torch.save(model_0.state_dict(), _MODEL_PATH)
+print(f"Model saved to: {_MODEL_PATH}")
+
+# Save training results as JSON so any script can load and compare metrics
+_RESULTS_PATH = _SAVE_DIR / "c_model_0_results.json"
+with open(_RESULTS_PATH, "w") as f:
+    json.dump(model_0_result, f, indent=2)
+print(f"Results saved to: {_RESULTS_PATH}")
 
 """
 8. What should be ideal loss curve look like?

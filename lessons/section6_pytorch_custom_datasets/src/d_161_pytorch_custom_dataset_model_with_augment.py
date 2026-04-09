@@ -1,3 +1,4 @@
+import json
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
@@ -102,7 +103,7 @@ optimizer = torch.optim.Adam(model_1.parameters(), lr=0.001)
 """
 torch.manual_seed(42)
 torch.cuda.manual_seed(42)
-NUM_EPOCHS = 20
+NUM_EPOCHS = 10
 start_time = default_timer()
 model_1_results = train(
     model=model_1,
@@ -128,3 +129,83 @@ plt.savefig(
 Sample output:
 {'model_name': 'TinyVGG', 'train_loss': [1.1037115156650543, 1.0763073936104774, 1.0745355859398842, 1.117841899394989, 1.081290602684021, 1.0965303480625153, 1.0544301122426987, 1.0637394040822983, 1.0622591599822044, 1.0040317848324776, 0.9607392475008965, 0.9803609922528267, 0.9505485594272614, 0.9474351331591606, 0.9690867587924004, 0.8865455463528633, 0.9473721086978912, 0.9878225922584534, 0.9086165204644203, 0.922882191836834], 'train_accuracy': [25.0, 42.578125, 42.578125, 30.46875, 47.265625, 38.671875, 52.34375, 51.5625, 44.140625, 43.75, 52.34375, 54.296875, 56.640625, 55.078125, 57.421875, 61.328125, 57.03125, 46.484375, 58.984375, 59.765625], 'test_loss': [1.1013043721516926, 1.1317500869433086, 1.1680513223012288, 1.1571898857752483, 1.1535391012827556, 1.1407412091890972, 1.1264049609502156, 1.122567613919576, 1.0951989491780598, 0.9865210254987081, 1.0291932026545207, 1.0558059215545654, 1.0353090365727742, 1.0455910762151082, 1.021833101908366, 1.0866369406382244, 1.0543920199076335, 1.0294636487960815, 1.088698108990987, 1.0232189893722534], 'test_accuracy': [26.041666666666668, 26.041666666666668, 26.041666666666668, 26.041666666666668, 26.041666666666668, 29.166666666666668, 32.291666666666664, 31.25, 34.375, 44.31818181818181, 41.47727272727273, 32.10227272727273, 42.42424242424242, 39.3939393939394, 35.13257575757576, 39.3939393939394, 35.22727272727273, 39.29924242424242, 34.18560606060606, 44.41287878787879]}
 """
+
+"""
+10. Compare model results with and without augmentation
+
+Some approaches:
+1. Hard code
+2. Pytorch + TensorBoard
+3. Weights + Biases (wandb)
+4. MLflow
+"""
+
+"""
+10.1 Load model_0 results (no augmentation) saved by c_152_*.py
+"""
+_results_path = Path(
+    "lessons/section6_pytorch_custom_datasets/src/c_model_0_results.json"
+)
+with open(_results_path) as f:
+    model_0_results = json.load(f)
+
+print("model_0 results loaded:", model_0_results)
+
+"""
+10.2 Plot model_0 vs model_1 loss and accuracy curves side by side for comparison
+    model_0 = TinyVGG without augmentation (c_152_*.py)
+    model_1 = TinyVGG with TrivialAugmentWide (this file)
+
+Note: the two models were trained for different numbers of epochs (10 vs 20),
+so we align by epoch index — the x-axis simply counts epochs from 1.
+"""
+fig, axes = plt.subplots(1, 2, figsize=(15, 7))
+
+# --- Loss ---
+ax = axes[0]
+for results, label in [
+    (model_0_results, "model_0 (no augment)"),
+    (model_1_results, "model_1 (augmented)"),
+]:
+    epochs_range = range(1, len(results["train_loss"]) + 1)
+    ax.plot(epochs_range, results["train_loss"], linestyle="--", label=f"{label} train")
+    ax.plot(epochs_range, results["test_loss"], linestyle="-", label=f"{label} test")
+ax.set_title("Loss Comparison: model_0 vs model_1")
+ax.set_xlabel("Epochs")
+ax.set_ylabel("Loss")
+ax.legend()
+ax.grid()
+
+# --- Accuracy ---
+ax = axes[1]
+for results, label in [
+    (model_0_results, "model_0 (no augment)"),
+    (model_1_results, "model_1 (augmented)"),
+]:
+    epochs_range = range(1, len(results["train_accuracy"]) + 1)
+    ax.plot(
+        epochs_range, results["train_accuracy"], linestyle="--", label=f"{label} train"
+    )
+    ax.plot(
+        epochs_range, results["test_accuracy"], linestyle="-", label=f"{label} test"
+    )
+ax.set_title("Accuracy Comparison: model_0 vs model_1")
+ax.set_xlabel("Epochs")
+ax.set_ylabel("Accuracy (%)")
+ax.legend()
+ax.grid()
+
+plt.tight_layout()
+plt.savefig(
+    "lessons/section6_pytorch_custom_datasets/src/d_line_199_comparison_model_0_vs_model_1.png"
+)
+
+"""
+11. Save model_1 weights for use in prediction / comparison in other files
+"""
+_SAVE_DIR = Path("lessons/section6_pytorch_custom_datasets/src")
+_SAVE_DIR.mkdir(parents=True, exist_ok=True)
+
+_MODEL_PATH = _SAVE_DIR / "d_model_1.pth"
+torch.save(model_1.state_dict(), _MODEL_PATH)
+print(f"model_1 saved to: {_MODEL_PATH}")

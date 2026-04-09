@@ -65,8 +65,8 @@ test_dir = data_path / "pizza_steak_sushi" / "test"
 #    exactly the same preprocessing that was used during ImageNet training.
 #    For training we add a few augmentations on top.
 # ─────────────────────────────────────────────────────────────────────────────
-weights = EfficientNet_B0_Weights.DEFAULT          # best available pretrained weights
-auto_transforms = weights.transforms()             # Resize(256) → CenterCrop(224) + Normalize
+weights = EfficientNet_B0_Weights.DEFAULT  # best available pretrained weights
+auto_transforms = weights.transforms()  # Resize(256) → CenterCrop(224) + Normalize
 
 # Build train transform: auto_transforms already include Normalize,
 # so we add geometric augmentations *before* the auto pipeline.
@@ -152,7 +152,7 @@ NUM_EPOCHS = 10
 
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(
-    params=model.classifier.parameters(),   # only train the new head
+    params=model.classifier.parameters(),  # only train the new head
     lr=0.001,
 )
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
