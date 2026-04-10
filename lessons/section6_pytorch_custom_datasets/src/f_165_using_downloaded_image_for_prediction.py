@@ -3,6 +3,7 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
 from torchvision.transforms import v2
+import torchvision
 import torchinfo
 
 from common.device import get_best_device, print_device_info
@@ -43,6 +44,23 @@ Image is not in either the train or test set, but we can still make a prediction
 
 # Download an image from the internet and save it to disk (done manually in this case)
 data_path = Path("lessons/section6_pytorch_custom_datasets/data")
+image_path = data_path / "pizza_steak_sushi"
+train_dir = image_path / "train"
+test_dir = image_path / "test"
+
+# Load the train image dataset to get the class names (pizza, steak, sushi)
+train_transform_trivial = v2.Compose(
+    [
+        v2.Resize((64, 64)),
+        v2.TrivialAugmentWide(num_magnitude_bins=31),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+    ]
+)
+train_dataset_augmented = datasets.ImageFolder(
+    root=train_dir, transform=train_transform_trivial
+)
+
 custom_image_path = data_path / "04-pizza-dad.jpg"
 
 if not custom_image_path.exists():
@@ -55,3 +73,68 @@ if not custom_image_path.exists():
         print(f"Custom image downloaded and saved to: {custom_image_path}")
 else:
     print(f"Custom image already exists at: {custom_image_path}")
+
+
+"""
+11.1 Loading the custom image and making a prediction on it
+
+- In tensor form with datatype of float32 (scaled between 0 and 1)
+- Shape of (1, 3, 64, 64) - a batch of 1 image with 3 color channels and 64x64 pixels
+- on target device (GPU or CPU)
+
+Using read_image or decode_image from torchvision.io to load the image, then applying the same transformations as the test set (resize to 64x64, convert to float32 and scale between 0 and 1) before making a prediction with the model.
+"""
+
+custom_image_unint8 = torchvision.io.decode_image(str(custom_image_path))
+print(f"Custom image loaded with shape: {custom_image_unint8.shape} and dtype: {custom_image_unint8.dtype}")
+
+"""
+11.2 Making a prediction on the custom image with trained PyTorch model
+"""
+# Try to make prediction on a image in uint8 format (values between 0 and 255, this will be incorrect)
+model_1.eval()
+try:
+    with torch.inference_mode():
+        custom_image_unint8 = custom_image_unint8.unsqueeze(0).to(device)  # Add batch dimension and move to device
+        pred_logits = model_1(custom_image_unint8)
+        pred_label = pred_logits.argmax(dim=1).item()
+        print(f"Predicted label (uint8 image): {pred_label}")
+except Exception as e:
+    print(f"Error making prediction on uint8 image: {e}")
+
+# Loading the custom image and converting to float32 format (values between 0 and 1) before making a prediction
+custom_image_float = torchvision.io.decode_image(str(custom_image_path)).float() 
+print(f"Custom image converted to float with shape: {custom_image_float.shape} and dtype: {custom_image_float.dtype}")
+
+model_1.eval()
+try:
+    with torch.inference_mode():
+        custom_image_float = custom_image_float.unsqueeze(0).to(device)  # Add batch dimension and move to device
+        pred_logits = model_1(custom_image_float)
+        pred_label = pred_logits.argmax(dim=1).item()
+        print(f"Predicted label (float image): {pred_label}")
+except Exception as e:
+    print(f"Error making prediction on float image: {e}")
+
+# Create transform pipleine for the custom image (resize to 64x64, convert to float32 and scale between 0 and 1)
+custom_image_transform = v2.Compose(
+    [
+        v2.Resize((64, 64)),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+    ]
+)
+custom_image = torchvision.io.decode_image(str(custom_image_path))
+custom_image_transformed = custom_image_transform(custom_image).to(device)  # Add batch dimension and move to device
+print(f"Original custom image shape: {custom_image.shape} and dtype: {custom_image.dtype}")
+print(f"Custom image transformed with shape: {custom_image_transformed.shape} and dtype: {custom_image_transformed.dtype}")
+model_1.eval()
+try:
+    with torch.inference_mode():
+        custom_image_transformed = custom_image_transformed.unsqueeze(0).to(device)  # Add batch dimension and move to device
+        pred_logits = model_1(custom_image_transformed)
+        pred_label = pred_logits.argmax(dim=1).item()
+        print(f"Predicted label (transformed image): {pred_label}")
+        print(f"Predicted label name: {train_dataset_augmented.classes[pred_label]}")
+except Exception as e:
+    print(f"Error making prediction on transformed image: {e}")
