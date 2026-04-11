@@ -25,7 +25,9 @@ import numpy as np
 import os
 
 """
-Recreate the data loading functions we built in sections 1, 2, 3 and 4. You should have train and test DataLoader's ready to use.
+7. Double the data you're using with your model and train it for 20 epochs, what happens to the results?
+Note: You can use the custom data creation notebook to scale up your Food101 dataset.
+You can also find the already formatted double data (20% instead of 10% subset) dataset on GitHub, you will need to write download code like in exercise 2 to get it into this notebook.
 """
 
 # get best device for training
@@ -34,7 +36,31 @@ print_device_info(device)
 
 # Set up path to a data folder
 data_path = Path("lessons/section6_pytorch_custom_datasets/data")
-image_path = data_path / "pizza_steak_sushi"
+image_path = data_path / "pizza_steak_sushi_increased"
+zip_path = data_path / "pizza_steak_sushi_increased.zip"
+
+# Download zip if it doesn't exist yet
+if zip_path.exists():
+    print(f"{zip_path} already exists... skipping download")
+else:
+    data_path.mkdir(parents=True, exist_ok=True)
+    with open(zip_path, "wb") as f:
+        response = requests.get(
+            "https://github.com/mrdbourke/pytorch-deep-learning/raw/refs/heads/main/data/pizza_steak_sushi_20_percent.zip"
+        )
+        print("Downloading data...")
+        f.write(response.content)
+
+# Unzip if the extracted folder doesn't exist yet
+if image_path.is_dir():
+    print(f"{image_path} already exists... skipping unzip")
+else:
+    image_path.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+        print("Unzipping data...")
+        zip_ref.extractall(image_path)  # Unzip the downloaded file
+
+# Train and test directories
 train_dir = image_path / "train"
 test_dir = image_path / "test"
 
@@ -79,25 +105,24 @@ print(f"Number of testing samples: {len(test_dataset)}")
 print(f"Number of training batches: {len(train_dataloader)}")
 print(f"Number of testing batches: {len(test_dataloader)}")
 
-"""
-6. Double the number of hidden units in your model and train it for 20 epochs, what happens to the results?
-"""
-
-model_0 = TinyVGG(
+# Create model and train for 20 epochs
+model_1_more_data = TinyVGG(
     in_features=3,
-    hidden_units=20,
+    hidden_units=64,
     out_features=len(train_dataset.classes),
 ).to(device)
 
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model_0.parameters(), lr=0.001)
-
+optimizer = torch.optim.Adam(model_1_more_data.parameters(), lr=0.001)
 torch.manual_seed(42)
 torch.cuda.manual_seed(42)
-NUM_EPOCHS = 50
-start_time = default_timer()
-model_0_results = train(
-    model=model_0,
+
+# 50 will make mode overfit (train accuracy near 100%, test between 50-60%),
+# 20 is a good number to see the difference between more data and less data
+NUM_EPOCHS = 20
+train_time_start_on_augmented = default_timer()
+model_1_more_data_results = train(
+    model=model_1_more_data,
     train_data_loader=train_dataloader,
     test_data_loader=test_dataloader,
     optimizer=optimizer,
@@ -106,10 +131,10 @@ model_0_results = train(
     epochs=NUM_EPOCHS,
     device=device,
 )
-end_time = default_timer()
-print_train_time(start_time, end_time, device=device)
-plot_loss_curves(model_0_results)
+train_time_end_on_augmented = default_timer()
+print_train_time(train_time_start_on_augmented, train_time_end_on_augmented)
+plot_loss_curves(model_1_more_data_results)
 plt.tight_layout()
 plt.savefig(
-    "lessons/section6_pytorch_custom_datasets/src/h_line_109_loss_curves_more_hidden_units.png"
+    "lessons/section6_pytorch_custom_datasets/src/i_line_136_loss_curves_more_data.png"
 )
