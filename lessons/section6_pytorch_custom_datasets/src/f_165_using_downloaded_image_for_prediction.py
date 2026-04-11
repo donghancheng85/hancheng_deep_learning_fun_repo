@@ -24,7 +24,6 @@ from timeit import default_timer
 import matplotlib.pyplot as plt
 import requests
 
-
 device = get_best_device()
 print_device_info(device)
 """
@@ -86,7 +85,9 @@ Using read_image or decode_image from torchvision.io to load the image, then app
 """
 
 custom_image_unint8 = torchvision.io.decode_image(str(custom_image_path))
-print(f"Custom image loaded with shape: {custom_image_unint8.shape} and dtype: {custom_image_unint8.dtype}")
+print(
+    f"Custom image loaded with shape: {custom_image_unint8.shape} and dtype: {custom_image_unint8.dtype}"
+)
 
 """
 11.2 Making a prediction on the custom image with trained PyTorch model
@@ -95,7 +96,9 @@ print(f"Custom image loaded with shape: {custom_image_unint8.shape} and dtype: {
 model_1.eval()
 try:
     with torch.inference_mode():
-        custom_image_unint8 = custom_image_unint8.unsqueeze(0).to(device)  # Add batch dimension and move to device
+        custom_image_unint8 = custom_image_unint8.unsqueeze(0).to(
+            device
+        )  # Add batch dimension and move to device
         pred_logits = model_1(custom_image_unint8)
         pred_label = pred_logits.argmax(dim=1).item()
         print(f"Predicted label (uint8 image): {pred_label}")
@@ -103,13 +106,17 @@ except Exception as e:
     print(f"Error making prediction on uint8 image: {e}")
 
 # Loading the custom image and converting to float32 format (values between 0 and 1) before making a prediction
-custom_image_float = torchvision.io.decode_image(str(custom_image_path)).float() 
-print(f"Custom image converted to float with shape: {custom_image_float.shape} and dtype: {custom_image_float.dtype}")
+custom_image_float = torchvision.io.decode_image(str(custom_image_path)).float()
+print(
+    f"Custom image converted to float with shape: {custom_image_float.shape} and dtype: {custom_image_float.dtype}"
+)
 
 model_1.eval()
 try:
     with torch.inference_mode():
-        custom_image_float = custom_image_float.unsqueeze(0).to(device)  # Add batch dimension and move to device
+        custom_image_float = custom_image_float.unsqueeze(0).to(
+            device
+        )  # Add batch dimension and move to device
         pred_logits = model_1(custom_image_float)
         pred_label = pred_logits.argmax(dim=1).item()
         print(f"Predicted label (float image): {pred_label}")
@@ -125,16 +132,97 @@ custom_image_transform = v2.Compose(
     ]
 )
 custom_image = torchvision.io.decode_image(str(custom_image_path))
-custom_image_transformed = custom_image_transform(custom_image).to(device)  # Add batch dimension and move to device
-print(f"Original custom image shape: {custom_image.shape} and dtype: {custom_image.dtype}")
-print(f"Custom image transformed with shape: {custom_image_transformed.shape} and dtype: {custom_image_transformed.dtype}")
+custom_image_transformed = custom_image_transform(custom_image).to(
+    device
+)  # Add batch dimension and move to device
+print(
+    f"Original custom image shape: {custom_image.shape} and dtype: {custom_image.dtype}"
+)
+print(
+    f"Custom image transformed with shape: {custom_image_transformed.shape} and dtype: {custom_image_transformed.dtype}"
+)
 model_1.eval()
 try:
     with torch.inference_mode():
-        custom_image_transformed = custom_image_transformed.unsqueeze(0).to(device)  # Add batch dimension and move to device
+        custom_image_transformed = custom_image_transformed.unsqueeze(0).to(
+            device
+        )  # Add batch dimension and move to device
         pred_logits = model_1(custom_image_transformed)
         pred_label = pred_logits.argmax(dim=1).item()
         print(f"Predicted label (transformed image): {pred_label}")
         print(f"Predicted label name: {train_dataset_augmented.classes[pred_label]}")
 except Exception as e:
     print(f"Error making prediction on transformed image: {e}")
+
+"""
+11.3 Building a function for custom image prediction
+
+A function pass an image path and a trained model, then load the image, apply the necessary transformations and make a prediction with the model. 
+The function should return the predicted class label name.
+"""
+
+
+def predict_custom_image_and_plot(
+    image_path: Path,
+    model: nn.Module,
+    class_names: List[str],
+    transform: v2.Compose,
+    device: torch.device = device,
+) -> str:
+    """
+    Predict the class label of a custom image and plot the image with the predicted label as the title.
+    Args:
+        - image_path: Path to the custom image
+        - model: Trained PyTorch model to use for prediction
+        - class_names: List of class names corresponding to the model's output labels
+        - transform: torchvision.transforms to apply to the image before prediction
+        - device: torch.device to perform the prediction on (default: best available device)
+    Returns:    - pred_label_name: The predicted class label name for the custom image
+    """
+
+    # Load the custom image
+    target_image = torchvision.io.decode_image(str(image_path)).type(torch.float32)
+
+    # Divide by 255 to scale between 0 and 1
+    target_image = target_image / 255.0
+
+    # Apply the necessary transformations
+    if transform is not None:
+        target_image = transform(target_image)
+
+    # Make model on target device
+    target_image = target_image.unsqueeze(0).to(
+        device
+    )  # Add batch dimension and move to device
+    model = model.to(device)
+
+    # Make a prediction with the model
+    model.eval()
+    with torch.inference_mode():
+        pred_logits = model(target_image)
+        pred_label = pred_logits.argmax(dim=1).item()
+        pred_label_name = class_names[pred_label]
+
+    # Plot the image with the predicted label as the title
+    plt.imshow(
+        target_image.cpu().squeeze().permute(1, 2, 0)
+    )  # Move to CPU, remove batch dimension and permute to (H, W, C)
+    plt.title(f"Predicted: {pred_label_name}")
+    plt.axis("off")
+
+    return pred_label_name
+
+
+predicted_label_name = predict_custom_image_and_plot(
+    image_path=custom_image_path,
+    model=model_1,
+    class_names=train_dataset_augmented.classes,
+    transform=custom_image_transform,
+    device=device,
+)
+
+plt.savefig(
+    "lessons/section6_pytorch_custom_datasets/src/f_line_223_predicted_custom_image.png"
+)
+
+print(f"Predicted label name for the custom image: {predicted_label_name}")
