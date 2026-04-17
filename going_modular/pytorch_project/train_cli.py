@@ -21,14 +21,12 @@ from torchvision.transforms import v2
 
 from timeit import default_timer as timer
 import typer
-from pathlib import Path
 
 from going_modular.pytorch_project.model_buillder import TinyVGG, TinyVGGWithCustomImageShape
 from going_modular.pytorch_project.data_setup import create_dataloaders
 from going_modular.pytorch_project.engine import train
 from going_modular.pytorch_project.utils import save_model
 
-from common.device import get_best_device, print_device_info
 from common.helper_fucntion import accuracy_fn
 
 # Create root level Typer app
