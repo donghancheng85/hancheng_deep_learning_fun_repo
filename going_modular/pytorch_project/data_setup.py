@@ -12,7 +12,8 @@ NUM_WORKERS = min(os.cpu_count() or 1, 2)
 def create_dataloaders(
     train_dir: str,
     test_dir: str,
-    transform: v2.Compose,
+    train_transform: v2.Compose,
+    test_transform: v2.Compose,
     batch_size: int,
     num_workers: int = NUM_WORKERS,
 ) -> tuple[DataLoader, DataLoader, list[str]]:
@@ -24,25 +25,27 @@ def create_dataloaders(
     Args:
         train_dir: Path to training directory.
         test_dir: Path to testing directory.
-        transform: torchvision transforms V2 to perform on training and testing data.
+        train_transform: torchvision transforms V2 to perform on training data.
+        test_transform: torchvision transforms V2 to perform on testing data.
         batch_size: Number of samples per batch in each of the DataLoaders.
         num_workers: An integer for number of workers per DataLoader.
 
     Returns:
         A tuple of (train_dataloader, test_dataloader, class_names).
         Where class_names is a list of the target classes.
-    
+
     Example usage:
     train_dataloader, test_dataloader, class_names = \
         create_dataloaders(train_dir=path/to/train_dir,
                             test_dir=path/to/test_dir,
-                            transform=some_transform,
+                            train_transform=train_transform,
+                            test_transform=test_transform,
                             batch_size=32,
                             num_workers=4)
     """
     # Use ImageFolder to create dataset(s)
-    train_data = datasets.ImageFolder(train_dir, transform=transform)
-    test_data = datasets.ImageFolder(test_dir, transform=transform)
+    train_data = datasets.ImageFolder(train_dir, transform=train_transform)
+    test_data = datasets.ImageFolder(test_dir, transform=test_transform)
 
     # Get class names
     class_names = train_data.classes

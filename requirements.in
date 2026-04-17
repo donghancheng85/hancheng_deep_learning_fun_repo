@@ -20,6 +20,7 @@ scikit-learn
 tqdm
 requests
 pyyaml
+typer
 
 # Dev / formatting
 black

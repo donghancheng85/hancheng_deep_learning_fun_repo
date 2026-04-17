@@ -38,3 +38,12 @@ with zipfile.ZipFile(data_path / "pizza_steak_sushi.zip", "r") as zip_ref:
 
 # Remove zip file
 os.remove(data_path / "pizza_steak_sushi.zip")
+
+"""
+Exercise 1 for section 7
+Turn the code to get the data (from section 1. Get Data above) into a Python script, such as get_data.py.
+When you run the script using python get_data.py it should check if the data already exists and skip downloading if it does.
+If the data download is successful, you should be able to access the pizza_steak_sushi images from the data directory.
+
+This is already done in the code above, you can run it to download the data and prepare it for the rest of the course.
+"""

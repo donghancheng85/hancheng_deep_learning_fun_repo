@@ -2,7 +2,6 @@
 Using the created script in going_modular to train a model on the data created in going_modular/data.
 """
 
-# Set random seeds
 import torch
 from torch import nn
 from torchvision.transforms import v2
@@ -44,7 +43,8 @@ data_transforms = v2.Compose(
 train_dataloader, test_dataloader, class_names = create_dataloaders(
     train_dir=train_dir,
     test_dir=test_dir,
-    transform=data_transforms,
+    train_transform=data_transforms,
+    test_transform=data_transforms,
     batch_size=BATCH_SIZE,
 )
 
