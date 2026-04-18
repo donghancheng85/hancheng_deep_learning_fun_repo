@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
+from torchvision import datasets
 from torchvision.transforms import v2
 import torchinfo
 
@@ -14,15 +14,10 @@ from lessons.section6_pytorch_custom_datasets.common.common import (
 )
 
 from timeit import default_timer
-import requests
-import zipfile
 from pathlib import Path
 import os
 import random
-from PIL import Image
 import matplotlib.pyplot as plt
-import numpy as np
-import os
 
 """
 1. Our models are underperforming (not fitting the data well). 

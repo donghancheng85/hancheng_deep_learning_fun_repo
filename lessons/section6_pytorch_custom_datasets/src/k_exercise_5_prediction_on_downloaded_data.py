@@ -1,29 +1,14 @@
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
 import torchvision
-from torchvision import datasets, transforms
 from torchvision.transforms import v2
-import torchinfo
 
 from common.device import get_best_device, print_device_info
-from common.helper_fucntion import accuracy_fn, print_train_time
 from lessons.section6_pytorch_custom_datasets.common.common import (
-    train,
-    plot_loss_curves,
     TinyVGGWithCustomImageShape,
 )
 
-from timeit import default_timer
-import requests
-import zipfile
 from pathlib import Path
-import os
-import random
-from PIL import Image
 import matplotlib.pyplot as plt
-import numpy as np
-import os
 
 """
 8. Make a prediction on your own custom image of pizza/steak/sushi (you could even download one from the internet) and share your prediction.

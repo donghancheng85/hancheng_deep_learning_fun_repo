@@ -2,11 +2,7 @@ import torch
 from torch import nn
 from sklearn.datasets import make_circles
 from sklearn.model_selection import train_test_split
-import pandas as pd
-from numpy import ndarray
 import matplotlib.pyplot as plt
-import requests
-from pathlib import Path
 from common.helper_fucntion import plot_decision_boundary, accuracy_fn
 from common.device import get_best_device, print_device_info
 

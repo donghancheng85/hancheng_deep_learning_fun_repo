@@ -1,5 +1,4 @@
 import torch
-from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
 from torchvision.transforms import v2
@@ -7,15 +6,12 @@ from torchvision.transforms import v2
 from common.device import get_best_device, print_device_info
 
 from typing import Tuple, Dict, List
-import zipfile
 from pathlib import Path
 import pathlib
 import os
 import random
 from PIL import Image
 import matplotlib.pyplot as plt
-import numpy as np
-import os
 
 """
 0. Setting up device-agnostic code

@@ -1,9 +1,4 @@
-import pandas as pd
-import numpy as np
 import torch
-import sklearn
-import matplotlib
-import torchinfo, torchmetrics
 
 
 def test():

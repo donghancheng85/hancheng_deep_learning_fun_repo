@@ -320,7 +320,9 @@ for epochs in range(epochs):
     ### Testing
     linear_regression_model.eval()  # turn off different settings in the model not needed for evaluation/testing (dropout/BatchNorml layers)
     # print(f"in loop {epochs}, model parameter = {linear_regression_model_parameters_listed}")
-    with torch.inference_mode():  # turuns off gradient tracking and a couple of more things behind the scenes
+    with (
+        torch.inference_mode()
+    ):  # turuns off gradient tracking and a couple of more things behind the scenes
         # 1. Do the forward pass
         test_prediction = linear_regression_model(X_test)
 

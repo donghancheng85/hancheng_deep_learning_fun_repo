@@ -20,7 +20,6 @@ from torch.utils.data import DataLoader
 from pathlib import Path
 import random
 
-import torchvision
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 

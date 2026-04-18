@@ -65,7 +65,6 @@ optimizer = optim.Adam(model.parameters(), lr=0.01)
 epochs = 200
 
 for epoch in range(epochs):
-
     model.train()
 
     # Forward pass

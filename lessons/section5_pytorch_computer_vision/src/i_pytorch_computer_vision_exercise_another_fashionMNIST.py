@@ -1,19 +1,13 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from typing import Callable
 
 from timeit import default_timer
-import time
 from tqdm.auto import tqdm
-from pathlib import Path
 
-import torchvision
 from torchvision import datasets
-from torchvision import transforms
 from torchvision.transforms import ToTensor
 
-import torchmetrics
 
 import matplotlib.pyplot as plt
 

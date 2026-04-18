@@ -8,9 +8,7 @@ import time
 from tqdm.auto import tqdm
 from pathlib import Path
 
-import torchvision
 from torchvision import datasets
-from torchvision import transforms
 from torchvision.transforms import ToTensor
 
 import torchmetrics

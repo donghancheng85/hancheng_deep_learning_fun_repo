@@ -1,5 +1,4 @@
 import torch
-import numpy
 from common.device import get_best_device
 
 """

@@ -7,7 +7,7 @@ import torchinfo
 import json
 
 from common.device import get_best_device, print_device_info
-from common.helper_fucntion import accuracy_fn, print_train_time
+from common.helper_fucntion import accuracy_fn
 from lessons.section6_pytorch_custom_datasets.common.common import (
     train,
     plot_loss_curves,
@@ -17,7 +17,6 @@ from typing import Tuple, Dict, List
 from pathlib import Path
 import pathlib
 import os
-import random
 from PIL import Image
 from timeit import default_timer
 import matplotlib.pyplot as plt

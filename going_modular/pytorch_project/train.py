@@ -79,7 +79,7 @@ model_0_results = train(
 
 # End the timer and print out how long it took
 end_time = timer()
-print(f"[INFO] Total training time: {end_time-start_time:.3f} seconds")
+print(f"[INFO] Total training time: {end_time - start_time:.3f} seconds")
 print(f"[INFO] train results: {model_0_results}")
 
 # Save the model

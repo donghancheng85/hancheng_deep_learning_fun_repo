@@ -5,7 +5,6 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 from numpy import ndarray
 import matplotlib.pyplot as plt
-import requests
 from pathlib import Path
 from common.helper_fucntion import plot_decision_boundary
 from lessons.section3_pytorch_workflow.common import plot_prediction
@@ -500,12 +499,14 @@ torch.cuda.manual_seed(42)
 epochs = 500
 
 # Put the data on target
-X_train_regression, y_train_regression = X_train_regression.to(
-    device
-), y_train_regression.to(device)
-X_test_regression, y_test_regression = X_test_regression.to(
-    device
-), y_test_regression.to(device)
+X_train_regression, y_train_regression = (
+    X_train_regression.to(device),
+    y_train_regression.to(device),
+)
+X_test_regression, y_test_regression = (
+    X_test_regression.to(device),
+    y_test_regression.to(device),
+)
 
 # Training
 for epoch in range(epochs):

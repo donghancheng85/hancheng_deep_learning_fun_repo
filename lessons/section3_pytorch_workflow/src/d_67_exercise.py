@@ -24,9 +24,7 @@ START: int = 0
 END: int = 1
 X = torch.arange(
     start=START, end=END, step=STEP, device=device, dtype=torch.float32
-).unsqueeze(
-    dim=1
-)  # make it a column vector (n*1 matrix)
+).unsqueeze(dim=1)  # make it a column vector (n*1 matrix)
 y = weight * X + bias
 
 print(f"length of X is {len(X)}")

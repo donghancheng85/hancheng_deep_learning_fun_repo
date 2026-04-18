@@ -22,7 +22,10 @@ from torchvision.transforms import v2
 from timeit import default_timer as timer
 import typer
 
-from going_modular.pytorch_project.model_buillder import TinyVGG, TinyVGGWithCustomImageShape
+from going_modular.pytorch_project.model_buillder import (
+    TinyVGG,
+    TinyVGGWithCustomImageShape,
+)
 from going_modular.pytorch_project.data_setup import create_dataloaders
 from going_modular.pytorch_project.engine import train
 from going_modular.pytorch_project.utils import save_model
@@ -82,7 +85,7 @@ def train_cli(
         help="File name to save the trained model as if --save-training is True.",
     ),
 ):
-    # The following mean and std values are commonly used for normalizing images 
+    # The following mean and std values are commonly used for normalizing images
     # when using pretrained models like ResNet, VGG, etc. on the ImageNet dataset.
     IMAGENET_MEAN = [0.485, 0.456, 0.406]
     IMAGENET_STD = [0.229, 0.224, 0.225]
@@ -164,7 +167,9 @@ def train_cli(
             optimizer=optimizer, T_max=num_epochs, eta_min=1e-6
         )
     else:
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate, weight_decay=1e-4)
+        optimizer = torch.optim.Adam(
+            params=model.parameters(), lr=learning_rate, weight_decay=1e-4
+        )
         scheduler = None
 
     # Start the timer
@@ -185,7 +190,7 @@ def train_cli(
 
     # End the timer and print out how long it took
     end_time = timer()
-    print(f"[INFO] Total training time: {end_time-start_time:.3f} seconds")
+    print(f"[INFO] Total training time: {end_time - start_time:.3f} seconds")
     print(f"[INFO] train results: {train_results}")
 
     if save_training:
@@ -194,7 +199,6 @@ def train_cli(
             save_path=save_dir,
             model_name=save_name,
         )
-
 
 
 if __name__ == "__main__":

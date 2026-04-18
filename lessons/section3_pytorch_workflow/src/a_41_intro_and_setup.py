@@ -1,8 +1,4 @@
 import torch
-from torch import (
-    nn,
-)  # nn contains all PyTorch building blocks for neural network (graphs)
-from matplotlib.pyplot import acorr  # visualization
 
 # PyTorch Work Flow
 covered_in_this_section = {
