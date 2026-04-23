@@ -94,7 +94,7 @@ print(f"Number of testing batches: {len(test_dataloader)}")
 and torchvision.models.get_model_transforms.
 """
 # get a set of pre-trained weights for a model (EfficientNet_B0 in this case)
-weights = torchvision.models.EfficientNet_B0_Weights.DEFAULT
+weights = torchvision.models.EfficientNet_B0_Weights.DEFAULT # Default is best avaliable weights
 auto_transforms = weights.transforms()
 print(f"Auto transforms: {auto_transforms}")
 
@@ -108,3 +108,39 @@ train_dataloader, test_dataloader, class_names = data_setup.create_dataloaders(
 print(f"Class names: {class_names}")
 print(f"Number of training batches: {len(train_dataloader)}")
 print(f"Number of testing batches: {len(test_dataloader)}")
+
+"""
+8.3 Get a pretrained model
+1. PyTorch domain library  <--- focus of this here
+2. Libraries like timm (PyTorch Image Models) which has a large collection of pre-trained models.
+3. Hugging Face's model hub which also has a wide variety of pre-trained models for different tasks.
+4. Papers with code which often provides pre-trained models along with the code for training and evaluation.
+"""
+
+"""
+8.3.1 Which pre-trained model to choose?
+By experiment
+
+Three things to consider when choosing a pre-trained model:
+1. Speed
+2. Performance
+3. Size (number of parameters)
+"""
+
+"""
+8.3.2 Setting up EfficientNet_B0
+"""
+# Method using torchvision v0.13+
+model_efficientnet_b0 = torchvision.models.efficientnet_b0(weights=weights).to(device)
+# print(model_efficientnet_b0)
+
+# Use torchinfo to get model summary
+# input_size: (batch_size, channels, height, width) - EfficientNet_B0 expects 224x224 RGB images
+summary(
+    model_efficientnet_b0,
+    input_size=(1, 3, 224, 224),
+    col_names=["input_size", "output_size", "num_params", "trainable"],
+    col_width=20,
+    row_settings=["var_names"],
+)
+
