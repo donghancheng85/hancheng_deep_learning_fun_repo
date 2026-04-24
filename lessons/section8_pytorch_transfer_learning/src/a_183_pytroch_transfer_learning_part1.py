@@ -94,7 +94,9 @@ print(f"Number of testing batches: {len(test_dataloader)}")
 and torchvision.models.get_model_transforms.
 """
 # get a set of pre-trained weights for a model (EfficientNet_B0 in this case)
-weights = torchvision.models.EfficientNet_B0_Weights.DEFAULT # Default is best avaliable weights
+weights = (
+    torchvision.models.EfficientNet_B0_Weights.DEFAULT
+)  # Default is best avaliable weights
 auto_transforms = weights.transforms()
 print(f"Auto transforms: {auto_transforms}")
 
@@ -134,13 +136,58 @@ Three things to consider when choosing a pre-trained model:
 model_efficientnet_b0 = torchvision.models.efficientnet_b0(weights=weights).to(device)
 # print(model_efficientnet_b0)
 
+
+"""
+8.3.3 Get a summary of the model using torchinfo
+"""
+# print(model_efficientnet_b0)
 # Use torchinfo to get model summary
 # input_size: (batch_size, channels, height, width) - EfficientNet_B0 expects 224x224 RGB images
 summary(
-    model_efficientnet_b0,
-    input_size=(1, 3, 224, 224),
-    col_names=["input_size", "output_size", "num_params", "trainable"],
+    model=model_efficientnet_b0,
+    input_size=(1, 3, 224, 224),  # batch size of 1 for summary, can be any number
+    col_names=[
+        "input_size",
+        "output_size",
+        "num_params",
+        "trainable",
+    ],  # specify which columns to show in the summary, note: it is not the name of the attributes in the model, but the name of the columns in the summary table
     col_width=20,
     row_settings=["var_names"],
 )
 
+"""
+8.3.4 Freezing the base model and changing the output layer to suit our number of classes (3 in this case)
+
+With a feature extractor model, we want to freeze the base model (the pre-trained part) and only train the new output layer we added. 
+This is because the base model has already learned useful features from the large dataset it was trained on, 
+and we don't want to modify those weights during training on our smaller dataset.
+"""
+# Freeze the base layers of the model
+for param in model_efficientnet_b0.features.parameters():
+    # turn off gradients for the base layers, so they won't be updated during training
+    param.requires_grad = False
+
+
+# Set random seeds for reproducibility
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
+# Update the output layer (classifier) to match the number of classes in our dataset (3 in this case)
+model_efficientnet_b0.classifier = nn.Sequential(
+    nn.Dropout(p=0.2, inplace=True),
+    nn.Linear(in_features=1280, out_features=len(class_names), bias=True),
+)
+
+print("\nAfter freezing the base layers:")
+summary(
+    model=model_efficientnet_b0,
+    input_size=(1, 3, 224, 224),
+    col_names=[
+        "input_size",
+        "output_size",
+        "num_params",
+        "trainable",
+    ],
+    col_width=20,
+    row_settings=["var_names"],
+)
