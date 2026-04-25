@@ -6,18 +6,15 @@ from torchvision.transforms import v2
 
 # Continue with regular imports
 import matplotlib.pyplot as plt
-import torch
-import torchvision
 
 from torch import nn
-from torchvision import transforms
 from timeit import default_timer as timer
 
 # Try to get torchinfo, install it if it doesn't work
 from torchinfo import summary
 
 # Import the going_modular directory, download it from GitHub if it doesn't work
-from going_modular.pytorch_project import data_setup, engine
+from going_modular.pytorch_project import data_setup, engine, utils
 
 from common.device import get_best_device, print_device_info
 from common.helper_fucntion import accuracy_fn, plot_loss_curves
@@ -224,6 +221,15 @@ train_end_time = timer()
 train_time = train_end_time - train_start_time
 print(f"[INFO] Training time: {train_time:.3f} seconds")
 print(f"Results: {results}")
+
+"""
+8.4.1 Save the trained model
+"""
+utils.save_model(
+    model=model_efficientnet_b0,
+    save_path="lessons/section8_pytorch_transfer_learning/models",
+    model_name="efficientnet_b0_transfer_learning.pth",
+)
 
 """
 8.5 Plot the loss curves

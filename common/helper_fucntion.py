@@ -180,6 +180,8 @@ def pred_and_plot_image(
     class_names: List[str] = None,
     transform=None,
     device: torch.device = "cuda" if torch.cuda.is_available() else "cpu",
+    ax=None,
+    true_class_name: str = None,
 ):
     """Makes a prediction on a target image with a trained model and plots the image.
 
@@ -189,6 +191,8 @@ def pred_and_plot_image(
         class_names (List[str], optional): different class names for target image. Defaults to None.
         transform (_type_, optional): transform of target image. Defaults to None.
         device (torch.device, optional): target device to compute on. Defaults to "cuda" if torch.cuda.is_available() else "cpu".
+        ax (matplotlib.axes.Axes, optional): axes to plot on. If None, uses current axes. Defaults to None.
+        true_class_name (str, optional): true class name of the image to include in the title. Defaults to None.
 
     Returns:
         Matplotlib plot of target image and model prediction as title.
@@ -206,6 +210,9 @@ def pred_and_plot_image(
 
     # 2. Divide the image pixel values by 255 to get them between [0, 1]
     target_image = target_image / 255.0
+
+    # Keep a copy of the original image for display before transform alters pixel values
+    display_image = target_image.clone()
 
     # 3. Transform if necessary
     if transform:
@@ -230,15 +237,24 @@ def pred_and_plot_image(
     target_image_pred_label = torch.argmax(target_image_pred_probs, dim=1)
 
     # 8. Plot the image alongside the prediction and prediction probability
-    plt.imshow(
-        target_image.squeeze().permute(1, 2, 0)
-    )  # make sure it's the right size for matplotlib
-    if class_names:
-        title = f"Pred: {class_names[target_image_pred_label.cpu()]} | Prob: {target_image_pred_probs.max().cpu():.3f}"
+    if ax is None:
+        ax = plt.gca()
+
+    ax.imshow(display_image.squeeze().permute(1, 2, 0))
+
+    pred_label = (
+        class_names[target_image_pred_label.cpu()]
+        if class_names
+        else str(target_image_pred_label.item())
+    )
+    prob = target_image_pred_probs.max().cpu()
+
+    if true_class_name:
+        title = f"True: {true_class_name}\nPred: {pred_label} | Prob: {prob:.3f}"
     else:
-        title = f"Pred: {target_image_pred_label} | Prob: {target_image_pred_probs.max().cpu():.3f}"
-    plt.title(title)
-    plt.axis(False)
+        title = f"Pred: {pred_label} | Prob: {prob:.3f}"
+    ax.set_title(title)
+    ax.axis("off")
 
 
 def set_seeds(seed: int = 42):
