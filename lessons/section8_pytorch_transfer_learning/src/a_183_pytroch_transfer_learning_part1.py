@@ -11,6 +11,7 @@ import torchvision
 
 from torch import nn
 from torchvision import transforms
+from timeit import default_timer as timer
 
 # Try to get torchinfo, install it if it doesn't work
 from torchinfo import summary
@@ -19,6 +20,7 @@ from torchinfo import summary
 from going_modular.pytorch_project import data_setup, engine
 
 from common.device import get_best_device, print_device_info
+from common.helper_fucntion import accuracy_fn, plot_loss_curves
 
 """
 Pytorch transfer learning is a technique where you take a pre-trained model (trained on a large dataset) and 
@@ -190,4 +192,43 @@ summary(
     ],
     col_width=20,
     row_settings=["var_names"],
+)
+
+"""
+8.4 Training and testing the model
+"""
+# Loss function and optimizer
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model_efficientnet_b0.parameters(), lr=0.001)
+
+# set manual seed for reproducibility
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
+
+# start timer
+train_start_time = timer()
+
+# Setup training and save the results
+results = engine.train(
+    model=model_efficientnet_b0,
+    train_data_loader=train_dataloader,
+    test_data_loader=test_dataloader,
+    optimizer=optimizer,
+    device=device,
+    accuracy_fn=accuracy_fn,
+    loss_fn=loss_fn,
+    epochs=10,
+)
+
+train_end_time = timer()
+train_time = train_end_time - train_start_time
+print(f"[INFO] Training time: {train_time:.3f} seconds")
+print(f"Results: {results}")
+
+"""
+8.5 Plot the loss curves
+"""
+plot_loss_curves(results)
+plt.savefig(
+    "lessons/section8_pytorch_transfer_learning/src/a_line_232_plot_loss_curves.png"
 )

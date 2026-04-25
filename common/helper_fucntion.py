@@ -146,8 +146,8 @@ def plot_loss_curves(results):
     loss = results["train_loss"]
     test_loss = results["test_loss"]
 
-    accuracy = results["train_acc"]
-    test_accuracy = results["test_acc"]
+    accuracy = results["train_accuracy"]
+    test_accuracy = results["test_accuracy"]
 
     epochs = range(len(results["train_loss"]))
 
