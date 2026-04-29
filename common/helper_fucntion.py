@@ -17,7 +17,9 @@ from pathlib import Path
 import requests
 
 from typing import List
+import torchmetrics
 import torchvision
+from mlxtend.plotting import plot_confusion_matrix as plot_confusion_matrix_mlxtend
 
 # Walk through an image classification directory and find out how many files (images)
 # are in each subdirectory.
@@ -312,3 +314,66 @@ def download_data(source: str, destination: str, remove_source: bool = True) -> 
             os.remove(data_path / target_file)
 
     return image_path
+
+
+def plot_confusion_matrix(
+    model: torch.nn.Module,
+    test_dir: str,
+    class_names: List[str],
+    save_path: str,
+    transform,
+    device: torch.device = torch.device("cpu"),
+):
+    """Generates and saves a confusion matrix plot for a classification model.
+
+    Args:
+        model (torch.nn.Module): Trained PyTorch image classification model.
+        test_dir (str): Path to the test directory (contains one subdir per class).
+        class_names (List[str]): List of class name strings.
+        save_path (str): File path to save the confusion matrix image.
+        transform: Transforms to apply to each image before inference.
+        device (torch.device, optional): Device to run inference on. Defaults to "cpu".
+    """
+    # Create lists to hold true and predicted labels
+    true_labels = []
+    pred_labels = []
+
+    model.to(device)
+    model.eval()
+
+    # Loop through each class directory in the test set
+    for class_dir in Path(test_dir).iterdir():
+        if class_dir.is_dir():
+            # Loop through each image in the class directory
+            for img_path in class_dir.iterdir():
+                if img_path.is_file():
+                    # Make a prediction on the image and get the predicted label
+                    target_image = torchvision.io.read_image(str(img_path)).type(
+                        torch.float32
+                    )
+                    target_image = target_image / 255.0  # scale to [0, 1]
+                    target_image = transform(target_image).unsqueeze(0).to(device)
+
+                    with torch.inference_mode():
+                        pred_logits = model(target_image)
+                        pred_label = class_names[pred_logits.argmax(dim=1).item()]
+
+                    # Append the true label and predicted label to the lists
+                    true_labels.append(class_names.index(class_dir.name))
+                    pred_labels.append(class_names.index(pred_label))
+
+    # Create and compute the confusion matrix
+    confusion_matrix_calculator = torchmetrics.ConfusionMatrix(
+        task="multiclass", num_classes=len(class_names)
+    )
+    confusion_matrix = confusion_matrix_calculator(
+        torch.tensor(pred_labels),
+        torch.tensor(true_labels),  # on cpu by default
+    )
+    # Plot and save the confusion matrix
+    fig, ax = plot_confusion_matrix_mlxtend(
+        conf_mat=confusion_matrix.numpy(), class_names=class_names, figsize=(10, 7)
+    )
+    plt.savefig(save_path)
+    print(f"[INFO] Confusion matrix saved to {save_path}")
+    plt.close(fig)

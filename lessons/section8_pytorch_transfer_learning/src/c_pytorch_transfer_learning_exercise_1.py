@@ -1,5 +1,4 @@
 from pathlib import Path
-import random
 
 import torch
 from torch import tensor
@@ -165,3 +164,9 @@ plt.savefig(
     "lessons/section8_pytorch_transfer_learning/src/c_line_164_web_waffle_prediction.png"
 )
 plt.close()
+
+"""
+4. Train the model from section 4 above for longer (10 epochs should do), what happens to the performance?
+
+Done, see lessons/section8_pytorch_transfer_learning/src/a_183_pytroch_transfer_learning_part1.py
+"""
