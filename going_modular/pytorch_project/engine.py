@@ -282,7 +282,9 @@ def train_for_summarywriter(
                     32, 3, 224, 224
                 ).to(device),  # example input for the graph (adjust shape as needed)
             )
-            writer.close()
+    
+    if writer is not None:
+        writer.close()
 
     return {
         "model_name": model.__class__.__name__,

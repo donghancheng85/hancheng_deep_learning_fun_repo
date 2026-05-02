@@ -12,6 +12,7 @@ from torchinfo import summary
 
 from going_modular.pytorch_project import data_setup, engine, download_data
 from common.device import get_best_device, print_device_info
+from common.helper_fucntion import accuracy_fn, set_seeds
 
 """
 Pytorch experiment tracking is to help you keep track of your experiments, their configurations, and their results. 
@@ -134,3 +135,17 @@ optimizer = torch.optim.Adam(model_efficientnet_b0.parameters(), lr=0.001)
 
 # Set up a SummaryWriter to log training metrics for TensorBoard
 writer = SummaryWriter("lessons/section9_pytorch_experiment_tracking/runs")
+
+# train the model and log results
+set_seeds()
+results = engine.train_for_summarywriter(
+    model=model_efficientnet_b0,
+    train_data_loader=train_dataloader,
+    test_data_loader=test_dataloader,
+    optimizer=optimizer,
+    device=device,
+    accuracy_fn=accuracy_fn,
+    writer=writer,
+    loss_fn=loss_fn,
+    epochs=5,
+)
