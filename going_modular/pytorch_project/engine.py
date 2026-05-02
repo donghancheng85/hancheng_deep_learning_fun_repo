@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from typing import Callable, Tuple
 from tqdm.auto import tqdm
+from torch.utils.tensorboard import SummaryWriter
 
 
 def train_step(
@@ -178,6 +179,110 @@ def train(
         train_accuracy_values.append(train_accuracy)
         test_loss_values.append(test_loss)
         test_accuracy_values.append(test_accuracy)
+
+    return {
+        "model_name": model.__class__.__name__,
+        "train_loss": train_loss_values,
+        "train_accuracy": train_accuracy_values,
+        "test_loss": test_loss_values,
+        "test_accuracy": test_accuracy_values,
+    }
+
+
+def train_for_summarywriter(
+    model: torch.nn.Module,
+    train_data_loader: torch.utils.data.DataLoader,
+    test_data_loader: torch.utils.data.DataLoader,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device | str,
+    accuracy_fn: Callable[[torch.Tensor, torch.Tensor], float],
+    writer: SummaryWriter | None = None,
+    loss_fn: torch.nn.Module = nn.CrossEntropyLoss(),
+    epochs: int = 5,
+    scheduler: torch.optim.lr_scheduler._LRScheduler | None = None,
+) -> dict[str, list[float] | str]:
+    """
+    Trains and tests a PyTorch model for a number of epochs.
+
+    Args:
+        model (torch.nn.Module): The PyTorch model to train and test.
+        train_data_loader (torch.utils.data.DataLoader): DataLoader providing training batches of (X, y).
+        test_data_loader (torch.utils.data.DataLoader): DataLoader providing test batches of (X, y).
+        loss_fn (torch.nn.Module): Loss function to compute per-batch training and test loss.
+        optimizer (torch.optim.Optimizer): Optimizer used to update model parameters during training.
+        accuracy_fn (Callable[[torch.Tensor, torch.Tensor], float]): Function that takes
+            (y_true, y_pred) tensors and returns an accuracy value.
+        device (torch.device): The device to move data to before computation.
+        epochs (int): Number of epochs to train and test for.
+        scheduler (torch.optim.lr_scheduler._LRScheduler | None): Learning rate scheduler to update the learning rate during training.
+    Returns:
+        dict[str, list[float] | str]: A dictionary with keys:
+            - "model_name": name of the model class
+            - "train_loss": list of average training loss values per epoch
+            - "train_accuracy": list of average training accuracy values per epoch
+            - "test_loss": list of average test loss values per epoch
+            - "test_accuracy": list of average test accuracy values per epoch
+    """
+    # Create empty lists to store metrics across epochs
+    train_loss_values = []
+    train_accuracy_values = []
+    test_loss_values = []
+    test_accuracy_values = []
+
+    for epoch in tqdm(range(epochs)):
+        print(f"Epoch {epoch + 1}/{epochs}")
+        train_loss, train_accuracy = train_step(
+            model=model,
+            data_loader=train_data_loader,
+            loss_fn=loss_fn,
+            optimizer=optimizer,
+            accuracy_fn=accuracy_fn,
+            device=device,
+        )
+        test_loss, test_accuracy = test_step(
+            model=model,
+            data_loader=test_data_loader,
+            loss_fn=loss_fn,
+            accuracy_fn=accuracy_fn,
+            device=device,
+        )
+
+        print(f"Epoch {epoch} metrics:")
+        print(f"Train loss: {train_loss:.5f}, Train accuracy: {train_accuracy:.4f}%")
+        print(f"Test loss: {test_loss:.5f}, Test accuracy: {test_accuracy:.4f}%")
+
+        # Step the scheduler if provided
+        if scheduler is not None:
+            scheduler.step()
+
+        # Append metrics for this epoch
+        train_loss_values.append(train_loss)
+        train_accuracy_values.append(train_accuracy)
+        test_loss_values.append(test_loss)
+        test_accuracy_values.append(test_accuracy)
+
+        # Add experiment tracking with SummaryWriter
+        if writer is not None:
+            writer.add_scalars(
+                main_tag="Loss",
+                tag_scalar_dict={"train_loss": train_loss, "test_loss": test_loss},
+                global_step=epoch,
+            )
+            writer.add_scalars(
+                main_tag="Accuracy",
+                tag_scalar_dict={
+                    "train_accuracy": train_accuracy,
+                    "test_accuracy": test_accuracy,
+                },
+                global_step=epoch,
+            )
+            writer.add_graph(
+                model=model,
+                input_to_model=torch.randn(
+                    32, 3, 224, 224
+                ).to(device),  # example input for the graph (adjust shape as needed)
+            )
+            writer.close()
 
     return {
         "model_name": model.__class__.__name__,

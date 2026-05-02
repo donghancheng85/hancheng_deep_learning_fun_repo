@@ -124,3 +124,13 @@ summary(
     col_width=20,
     row_settings=["var_names"],
 )
+
+"""
+2.4 Train a single model and track results
+"""
+# Loss function and optimizer
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model_efficientnet_b0.parameters(), lr=0.001)
+
+# Set up a SummaryWriter to log training metrics for TensorBoard
+writer = SummaryWriter("lessons/section9_pytorch_experiment_tracking/runs")
