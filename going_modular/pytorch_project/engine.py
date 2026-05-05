@@ -276,14 +276,13 @@ def train_for_summarywriter(
                 },
                 global_step=epoch,
             )
-            writer.add_graph(
-                model=model,
-                input_to_model=torch.randn(
-                    32, 3, 224, 224
-                ).to(device),  # example input for the graph (adjust shape as needed)
-            )
-    
+
+    # Add model graph once after training (graph doesn't change between epochs)
     if writer is not None:
+        writer.add_graph(
+            model=model,
+            input_to_model=torch.randn(32, 3, 224, 224).to(device),
+        )
         writer.close()
 
     return {
