@@ -149,3 +149,15 @@ results = engine.train_for_summarywriter(
     loss_fn=loss_fn,
     epochs=5,
 )
+
+
+"""
+5. Visualize training results in TensorBoard
+
+There is an issue with setuptools, which has removed pkg_resources, which is need by tensorboard.
+To fix this issue, install setuptools with the following command:
+pip install "setuptools==70.3.0"
+
+Then start tensorboard with the following command:
+tensorboard --logdir lessons/section9_pytorch_experiment_tracking/runs
+"""
