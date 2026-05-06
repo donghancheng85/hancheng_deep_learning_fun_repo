@@ -4,7 +4,10 @@ A series of helper functions used throughout the course.
 If a function gets defined once and could be used over and over, it'll go in here.
 """
 
+from datetime import datetime
+
 import torch
+from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -377,3 +380,29 @@ def plot_confusion_matrix(
     plt.savefig(save_path)
     print(f"[INFO] Confusion matrix saved to {save_path}")
     plt.close(fig)
+
+
+def create_summary_writer(
+    experiment_name: str, model_name: str, extra: str | None = None
+) -> SummaryWriter:
+    """Creates a SummaryWriter instance with a specific folder structure for organizing experiments."""
+    # Get timestamp of current date in reverse order (YYYY-MM-DD-HH-MM-SS)
+    timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+    if extra:
+        log_dir = os.path.join(
+            "lessons/section9_pytorch_experiment_tracking/runs",
+            timestamp,
+            experiment_name,
+            model_name,
+            extra,
+        )
+    else:
+        log_dir = os.path.join(
+            "lessons/section9_pytorch_experiment_tracking/runs",
+            timestamp,
+            experiment_name,
+            model_name,
+        )
+    print(f"[INFO] Creating SummaryWriter with log directory: {log_dir}")
+    return SummaryWriter(log_dir=log_dir)

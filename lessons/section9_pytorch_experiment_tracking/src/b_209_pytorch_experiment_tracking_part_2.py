@@ -14,7 +14,7 @@ from torchinfo import summary
 
 from going_modular.pytorch_project import data_setup, engine, download_data
 from common.device import get_best_device, print_device_info
-from common.helper_fucntion import accuracy_fn, set_seeds
+from common.helper_fucntion import accuracy_fn, set_seeds, create_summary_writer
 
 # set up device
 device = get_best_device()
@@ -39,33 +39,37 @@ name will be like:
 runs/YYYY-MM-DD-HH-MM-SS/experiment-name/model-name/hyperparameters(extras)
 """
 
+# Example of creating a SummaryWriter instance with the create_summary_writer() function
+# example_writer = create_summary_writer(
+#     experiment_name="data_10_percent", model_name="efficientnet_b0", extra="5_epochs"
+# )
+# print(f"Example log directory: {example_writer.log_dir}")
 
-def create_summary_writer(
-    experiment_name: str, model_name: str, extra: str | None = None
-) -> SummaryWriter:
-    """Creates a SummaryWriter instance with a specific folder structure for organizing experiments."""
-    # Get timestamp of current date in reverse order (YYYY-MM-DD-HH-MM-SS)
-    timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+"""
+7. Setting up a series of modeling experiments
+"""
 
-    if extra:
-        log_dir = os.path.join(
-            "lessons/section9_pytorch_experiment_tracking/runs",
-            timestamp,
-            experiment_name,
-            model_name,
-            extra,
-        )
-    else:
-        log_dir = os.path.join(
-            "lessons/section9_pytorch_experiment_tracking/runs",
-            timestamp,
-            experiment_name,
-            model_name,
-        )
-    print(f"[INFO] Creating SummaryWriter with log directory: {log_dir}")
-    return SummaryWriter(log_dir=log_dir)
+"""
+7.1 What experiments to run? (different hyperparameters)
+- Number of epochs
+- Number of hidden units
+- amount of data to train on
+- Learning rate
+- different kinds of augmentation
+- Choose a different model architecture
 
-example_writer = create_summary_writer(
-    experiment_name="data_10_percent", model_name="efficientnet_b0", extra="5_epochs"
-)
-print(f"Example log directory: {example_writer.log_dir}")
+This is why transfer learning is so useful, it allows us to quickly iterate through different experiments by only changing a few lines of code.
+"""
+
+"""
+7.2 What experiments to run in this code? (make it simple currently)
+1. Model size - efficientnet_b0 vs efficientnet_b2 (number of parameters - 5.3 million vs 9.2 million)
+2. Dataset size - 10% vs 20% (pizza, steak, sushi)
+3. Training epochs - 5 vs 10 epochs
+"""
+
+"""
+7.3 Download the data (already done in part 1, so we can skip this step)
+10% dir - going_modular/data/pizza_steak_sushi
+20% dir - lessons/section6_pytorch_custom_datasets/data/pizza_steak_sushi_increased
+"""
