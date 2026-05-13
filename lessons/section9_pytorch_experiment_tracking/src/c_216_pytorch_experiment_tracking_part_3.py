@@ -121,7 +121,7 @@ for train_dataloader_name, train_dataloader in train_dataloaders.items():
 
             # Create a summary writer
             experiment_name = f"{model_name}_{train_dataloader_name}_{epochs}_epochs"
-            
+
             writer = create_summary_writer(
                 experiment_name=train_dataloader_name,
                 model_name=model_name,
