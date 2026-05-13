@@ -387,7 +387,7 @@ def create_summary_writer(
 ) -> SummaryWriter:
     """Creates a SummaryWriter instance with a specific folder structure for organizing experiments."""
     # Get timestamp of current date in reverse order (YYYY-MM-DD-HH-MM-SS)
-    timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    timestamp = datetime.now().strftime("%Y-%m-%d")
 
     if extra:
         log_dir = os.path.join(

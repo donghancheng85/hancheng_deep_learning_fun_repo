@@ -213,3 +213,7 @@ __marimo__/
 # Training run results — ignore any folder named "runs" anywhere in the repo
 # (e.g. lessons/section9_pytorch_experiment_tracking/runs/) to keep repo size small
 **/runs/
+
+# Saved model files — ignore any folder named "models" anywhere in the repo
+# (e.g. going_modular/models/, lessons/section*/models/) to keep repo size small
+**/models/
