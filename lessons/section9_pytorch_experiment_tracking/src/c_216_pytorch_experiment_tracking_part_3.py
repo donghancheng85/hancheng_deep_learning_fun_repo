@@ -38,35 +38,44 @@ train_dir_20_percent = data_path_20_percent / "train"
 # Set up test dir (same for both)
 test_dir = data_path_10_percent / "test"
 
-IMAGENET_MEAN = [0.485, 0.456, 0.406]
-IMAGENET_STD = [0.229, 0.224, 0.225]
 BATCH_SIZE = 32
 
-# Set up transforms (same for both)
-manual_transform = v2.Compose(
-    [
-        v2.Resize((224, 224)),
-        v2.ToImage(),
-        v2.ToDtype(torch.float32, scale=True),
-        v2.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-    ]
-)
+# Use each model's recommended pretrained transforms (correct native input resolution)
+# EfficientNet-B0 was pretrained at 224x224; EfficientNet-B2 at 260x260 (crops to 288)
+effnetb0_transform = torchvision.models.EfficientNet_B0_Weights.DEFAULT.transforms()
+effnetb2_transform = torchvision.models.EfficientNet_B2_Weights.DEFAULT.transforms()
 
-train_dataloader_10_percent, test_dataloader, class_names = (
+# Create dataloaders for effnetb0
+train_dataloader_10_percent_b0, test_dataloader_b0, class_names = (
     data_setup.create_dataloaders(
         train_dir=str(train_dir_10_percent),
         test_dir=str(test_dir),
-        train_transform=manual_transform,
-        test_transform=manual_transform,
+        train_transform=effnetb0_transform,
+        test_transform=effnetb0_transform,
         batch_size=BATCH_SIZE,
     )
 )
-
-train_dataloader_20_percent, _, _ = data_setup.create_dataloaders(
+train_dataloader_20_percent_b0, _, _ = data_setup.create_dataloaders(
     train_dir=str(train_dir_20_percent),
     test_dir=str(test_dir),
-    train_transform=manual_transform,
-    test_transform=manual_transform,
+    train_transform=effnetb0_transform,
+    test_transform=effnetb0_transform,
+    batch_size=BATCH_SIZE,
+)
+
+# Create dataloaders for effnetb2
+train_dataloader_10_percent_b2, test_dataloader_b2, _ = data_setup.create_dataloaders(
+    train_dir=str(train_dir_10_percent),
+    test_dir=str(test_dir),
+    train_transform=effnetb2_transform,
+    test_transform=effnetb2_transform,
+    batch_size=BATCH_SIZE,
+)
+train_dataloader_20_percent_b2, _, _ = data_setup.create_dataloaders(
+    train_dir=str(train_dir_20_percent),
+    test_dir=str(test_dir),
+    train_transform=effnetb2_transform,
+    test_transform=effnetb2_transform,
     batch_size=BATCH_SIZE,
 )
 
@@ -79,20 +88,27 @@ num_epochs = [5, 10]
 # Create model list
 models = ["effnetb0", "effnetb2"]
 
-# Create a dataloaders dictionary
+# Dataloaders grouped by model so each model uses its correct native transform
 train_dataloaders = {
-    "data_10_percent": train_dataloader_10_percent,
-    "data_20_percent": train_dataloader_20_percent,
+    "effnetb0": {
+        "data_10_percent": train_dataloader_10_percent_b0,
+        "data_20_percent": train_dataloader_20_percent_b0,
+    },
+    "effnetb2": {
+        "data_10_percent": train_dataloader_10_percent_b2,
+        "data_20_percent": train_dataloader_20_percent_b2,
+    },
 }
-
-# set the seed for reproducibility
-set_seeds(seed=42)
+test_dataloaders = {
+    "effnetb0": test_dataloader_b0,
+    "effnetb2": test_dataloader_b2,
+}
 
 # Keep track of experiment numbers
 experiment_number = 0
 
-# Loop each data loader
-for train_dataloader_name, train_dataloader in train_dataloaders.items():
+# Loop each data loader name
+for train_dataloader_name in ["data_10_percent", "data_20_percent"]:
     # Loop through the epochs
     for epochs in num_epochs:
         # Loop through the models
@@ -104,6 +120,13 @@ for train_dataloader_name, train_dataloader in train_dataloaders.items():
                 f"[INFO] Epochs: {epochs} \n"
                 f"[INFO] Dataloader: {train_dataloader_name}"
             )
+
+            # Set the seed for each experiment to ensure reproducibility and fair comparison
+            set_seeds(seed=42)
+
+            # Select the correct dataloaders for this model (each uses its native pretrained transform)
+            train_dataloader = train_dataloaders[model_name][train_dataloader_name]
+            test_dataloader = test_dataloaders[model_name]
 
             # Create a model
             if model_name == "effnetb0":
@@ -149,3 +172,11 @@ for train_dataloader_name, train_dataloader in train_dataloaders.items():
             )
 
             print("-" * 50)
+
+"""
+8. Visualize training results in TensorBoard
+Run the following command in your terminal to launch TensorBoard and visualize the results of your experiments:
+tensorboard --logdir lessons/section9_pytorch_experiment_tracking/runs
+
+Let use the effnetb2 model as the best one
+"""
