@@ -1,31 +1,18 @@
 import matplotlib.pyplot as plt
 import torch
 import torchvision
-from torchvision.transforms import v2
 from pathlib import Path
-from torch.utils.tensorboard import SummaryWriter
 
 from torch import nn
 from torchvision import transforms
-from datetime import datetime
-import os
 import random
 
-from torchinfo import summary
 
-from going_modular.pytorch_project import data_setup, engine, download_data, utils
 from common.device import get_best_device, print_device_info
 from common.helper_fucntion import (
-    accuracy_fn,
-    set_seeds,
-    create_summary_writer,
     pred_and_plot_image,
 )
 
-from lessons.section9_pytorch_experiment_tracking.common.common_functions import (
-    create_efficientnet_b0_model,
-    create_efficientnet_b2_model,
-)
 
 # Set up device
 device = get_best_device()

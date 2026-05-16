@@ -1,18 +1,11 @@
-import matplotlib.pyplot as plt
 import torch
 import torchvision
-from torchvision.transforms import v2
 from pathlib import Path
-from torch.utils.tensorboard import SummaryWriter
 
 from torch import nn
-from torchvision import transforms
-from datetime import datetime
-import os
 
-from torchinfo import summary
 
-from going_modular.pytorch_project import data_setup, engine, download_data, utils
+from going_modular.pytorch_project import data_setup, engine, utils
 from common.device import get_best_device, print_device_info
 from common.helper_fucntion import accuracy_fn, set_seeds, create_summary_writer
 

@@ -172,7 +172,10 @@ def train(
 
         # Step the scheduler if provided
         if scheduler is not None:
-            scheduler.step()
+            if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                scheduler.step(test_loss)
+            else:
+                scheduler.step()
 
         # Append metrics for this epoch
         train_loss_values.append(train_loss)
@@ -253,7 +256,10 @@ def train_for_summarywriter(
 
         # Step the scheduler if provided
         if scheduler is not None:
-            scheduler.step()
+            if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                scheduler.step(test_loss)
+            else:
+                scheduler.step()
 
         # Append metrics for this epoch
         train_loss_values.append(train_loss)

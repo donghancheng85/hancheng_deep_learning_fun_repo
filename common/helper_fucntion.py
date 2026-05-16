@@ -383,11 +383,17 @@ def plot_confusion_matrix(
 
 
 def create_summary_writer(
-    experiment_name: str, model_name: str, extra: str | None = None
+    experiment_name: str,
+    model_name: str,
+    extra: str | None = None,
+    index: str | None = None,
 ) -> SummaryWriter:
     """Creates a SummaryWriter instance with a specific folder structure for organizing experiments."""
-    # Get timestamp of current date in reverse order (YYYY-MM-DD-HH-MM-SS)
+    # Get timestamp of current date in reverse order (YYYY-MM-DD)
     timestamp = datetime.now().strftime("%Y-%m-%d")
+
+    if index is not None:
+        timestamp += f"-{index}"
 
     if extra:
         log_dir = os.path.join(
