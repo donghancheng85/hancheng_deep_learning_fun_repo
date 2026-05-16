@@ -40,7 +40,7 @@ class_names = train_dataset.classes
 print(f"[INFO] Classes: {len(class_names)}, Train: {len(train_dataset)}, Test: {len(test_dataset)}")
 
 BATCH_SIZE = 32
-NUM_WORKERS = 2
+NUM_WORKERS = 8
 
 train_dataloader = DataLoader(
     train_dataset,
@@ -61,13 +61,16 @@ test_dataloader = DataLoader(
 set_seeds(seed=42)
 model = create_efficientnet_b3_model(num_classes=len(class_names)).to(device)
 
+EPOCHS = 10
+
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS)
 
 writer = create_summary_writer(
     experiment_name="food101",
     model_name=model.__class__.__name__,
-    extra="5_epochs",
+    extra=f"{EPOCHS}_epochs",
     index="food101-effnetb3",
 )
 
@@ -78,16 +81,18 @@ engine.train_for_summarywriter(
     test_data_loader=test_dataloader,
     optimizer=optimizer,
     loss_fn=loss_fn,
-    epochs=5,
+    epochs=EPOCHS,
     device=device,
     accuracy_fn=accuracy_fn,
     writer=writer,
+    scheduler=scheduler,
 )
+scheduler.step()
 end_time = timer()
 print(f"[INFO] Total training time: {end_time - start_time:.3f} seconds ({(end_time - start_time) / 60:.2f} minutes)")
 
 utils.save_model(
     model=model,
     save_path=Path("lessons/section9_pytorch_experiment_tracking/models"),
-    model_name="09_efficientnet_b3_food101_5_epochs.pth",
+    model_name="09_efficientnet_b3_food101_10_epochs.pth",
 )
