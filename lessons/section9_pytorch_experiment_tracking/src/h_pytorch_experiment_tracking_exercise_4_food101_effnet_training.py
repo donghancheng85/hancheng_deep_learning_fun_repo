@@ -87,7 +87,6 @@ engine.train_for_summarywriter(
     writer=writer,
     scheduler=scheduler,
 )
-scheduler.step()
 end_time = timer()
 print(f"[INFO] Total training time: {end_time - start_time:.3f} seconds ({(end_time - start_time) / 60:.2f} minutes)")
 
