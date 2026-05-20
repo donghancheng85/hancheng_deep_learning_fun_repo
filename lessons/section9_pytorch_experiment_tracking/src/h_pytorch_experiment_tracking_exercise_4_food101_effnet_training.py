@@ -37,7 +37,9 @@ test_dataset = torchvision.datasets.Food101(
 )
 
 class_names = train_dataset.classes
-print(f"[INFO] Classes: {len(class_names)}, Train: {len(train_dataset)}, Test: {len(test_dataset)}")
+print(
+    f"[INFO] Classes: {len(class_names)}, Train: {len(train_dataset)}, Test: {len(test_dataset)}"
+)
 
 BATCH_SIZE = 32
 NUM_WORKERS = 8
@@ -88,7 +90,9 @@ engine.train_for_summarywriter(
     scheduler=scheduler,
 )
 end_time = timer()
-print(f"[INFO] Total training time: {end_time - start_time:.3f} seconds ({(end_time - start_time) / 60:.2f} minutes)")
+print(
+    f"[INFO] Total training time: {end_time - start_time:.3f} seconds ({(end_time - start_time) / 60:.2f} minutes)"
+)
 
 utils.save_model(
     model=model,

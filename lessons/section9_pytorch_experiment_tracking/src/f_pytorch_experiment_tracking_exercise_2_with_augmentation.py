@@ -45,7 +45,9 @@ for the training data and the testing data (because you don't need to perform da
 """
 
 # EfficientNet B3 default pretrained transform (no augmentation) — used for test set and no_aug train set
-effnetb3_default_transform = torchvision.models.EfficientNet_B3_Weights.DEFAULT.transforms()
+effnetb3_default_transform = (
+    torchvision.models.EfficientNet_B3_Weights.DEFAULT.transforms()
+)
 
 # Augmented training transform using v2
 # Derive the input size dynamically from the pretrained transform so this stays correct
@@ -133,4 +135,3 @@ for augment_label, train_dataloader in train_dataloaders.items():
             save_path=Path("lessons/section9_pytorch_experiment_tracking/models"),
             model_name=f"09_{model.__class__.__name__}_20_percent_{epochs}_epochs_{augment_label}.pth",
         )
-
