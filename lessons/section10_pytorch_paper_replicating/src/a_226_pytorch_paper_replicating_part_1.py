@@ -75,3 +75,18 @@ save_path = Path(
 fig.savefig(save_path)
 plt.close(fig)
 print(f"Saved sample image to {save_path}")
+
+"""
+3. Replicate ViT (Vision Transformer) paper overview:
+
+Breakdown into small pieces
+ - Inputs -> image tensors
+ - Outputs -> What comes out of the model (e.g. class probabilities or labels)
+ - Layers -> Takes input and manipulates it with a function (attention)
+ - Blcoks -> A collection of layers (e.g. attention + feedforward)
+ - Model (architecture) -> A collection of blocks (e.g. ViT)
+"""
+
+"""
+3.1 ViT (Vision Transformer) paper overview
+"""
