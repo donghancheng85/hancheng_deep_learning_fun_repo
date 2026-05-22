@@ -89,4 +89,202 @@ Breakdown into small pieces
 
 """
 3.1 ViT (Vision Transformer) paper overview
+
+Paper: "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"
+Authors: Dosovitskiy et al. (Google Brain), 2020  https://arxiv.org/abs/2010.11929
+
+Key Insight:
+  - Pure Transformer architectures (originally designed for NLP) can be applied directly
+    to sequences of image patches for image classification.
+  - When trained on large datasets (JFT-300M, ImageNet-21k), ViT matches or surpasses
+    CNN-based models (ResNet, EfficientNet) with less compute at inference.
+  - Unlike CNNs, ViT has NO built-in inductive biases (no local receptive fields,
+    no translation equivariance) — the model learns spatial structure purely from data.
+
+Architecture Pipeline:
+  Image (H x W x C)
+    -> Split into N fixed-size patches  (each patch is P x P x C)
+    -> Flatten each patch to a 1D vector of length P²·C
+    -> Linear projection (patch embedding) to dimension D
+    -> Prepend a learnable [class] token
+    -> Add learnable positional embeddings
+    -> Feed the sequence of N+1 tokens into a standard Transformer Encoder
+    -> Take the [class] token output from the final layer
+    -> Pass through an MLP Head for classification
+
+  where:
+    H, W = image height, width
+    C    = number of channels (e.g. 3 for RGB)
+    P    = patch size (e.g. 16 for ViT-16)
+    N    = H·W / P²  (number of patches, becomes the sequence length)
+    D    = embedding dimension (hidden size of the Transformer)
+
+Four Core Equations from the paper (Section 3, Equation 1-4):
+─────────────────────────────────────────────────────────────────────────────────────────
+
+Equation 1 — Patch + Position Embedding (input preparation):
+
+  z₀ = [x_class ; x_p¹·E ; x_p²·E ; ... ; x_pᴺ·E] + E_pos
+
+  - x_pⁱ ∈ ℝ^(P²·C)         : flattened i-th image patch
+  - E    ∈ ℝ^(P²·C × D)      : learnable linear projection (the patch embedding layer)
+  - x_class ∈ ℝ^D             : learnable [class] token prepended at position 0
+  - E_pos  ∈ ℝ^((N+1) × D)   : learnable 1D positional embeddings added element-wise
+  - z₀   ∈ ℝ^((N+1) × D)     : the full input sequence to the Transformer Encoder
+
+  Purpose: Converts a 2D image into a 1D sequence of D-dimensional tokens so the
+  standard Transformer can process it. The [class] token aggregates global image
+  information; positional embeddings inject spatial order (since attention is
+  permutation-invariant).
+
+─────────────────────────────────────────────────────────────────────────────────────────
+
+Equation 2 — Multi-Head Self-Attention (MSA) sub-layer (for layer ℓ):
+
+  z'_ℓ = MSA(LN(z_{ℓ-1})) + z_{ℓ-1}
+
+  - LN               : Layer Normalization applied BEFORE attention (Pre-LN variant)
+  - MSA              : Multi-Head Self-Attention — each token attends to every other token
+  - + z_{ℓ-1}        : residual (skip) connection — adds the un-normalized input back
+  - z'_ℓ             : intermediate output after the attention sub-layer
+
+  Purpose: Allows every token (patch) to exchange information with every other token
+  across the entire sequence in parallel. The Pre-LN + residual design stabilises
+  training in deep networks.
+
+─────────────────────────────────────────────────────────────────────────────────────────
+
+Equation 3 — MLP (Feed-Forward) sub-layer (for layer ℓ):
+
+  z_ℓ = MLP(LN(z'_ℓ)) + z'_ℓ
+
+  - LN               : Layer Normalization applied BEFORE the MLP (Pre-LN variant)
+  - MLP              : Two linear layers with a GELU activation in between
+                       (expands D -> 4D then projects back 4D -> D)
+  - + z'_ℓ           : residual (skip) connection
+  - z_ℓ              : output of Transformer Encoder layer ℓ
+
+  Purpose: After global information mixing via MSA, the MLP processes each token
+  independently and non-linearly, acting as the "reasoning" step per position.
+  Together, Equations 2 & 3 form one complete Transformer Encoder block.
+  These blocks are stacked L times.
+
+─────────────────────────────────────────────────────────────────────────────────────────
+
+Equation 4 — Classification Head (final prediction):
+
+  y = LN(z_L⁰)
+
+  - z_L⁰             : the [class] token output from the LAST (L-th) Transformer layer
+                       (index 0 of the sequence, shape: [D])
+  - LN               : final Layer Normalization
+  - y                : passed through a linear MLP head -> class logits
+
+  Purpose: Only the [class] token is used for prediction — it has attended to all
+  patch tokens across all L layers and therefore encodes a global image representation.
+  During pre-training a 2-layer MLP head is used; during fine-tuning a single linear
+  layer suffices.
+
+─────────────────────────────────────────────────────────────────────────────────────────
+
+Summary flow of equations:
+  Image -> Eq.1 (embed patches + positions) -> [Eq.2 (MSA) + Eq.3 (MLP)] × L layers
+        -> Eq.4 (extract class token) -> MLP Head -> class probabilities
+
+═════════════════════════════════════════════════════════════════════════════════════════
+PSEUDO CODE — mapping each equation to PyTorch building blocks
+═════════════════════════════════════════════════════════════════════════════════════════
+
+# ── Hyperparameters (ViT-Base defaults) ──────────────────────────────────────────────
+# IMG_SIZE  = 224        # input image height = width
+# PATCH_SIZE = 16        # each patch is 16×16 pixels
+# IN_CHANNELS = 3        # RGB
+# NUM_PATCHES = (IMG_SIZE // PATCH_SIZE) ** 2   # = 196
+# EMBED_DIM = 768        # D — hidden/embedding dimension
+# NUM_HEADS = 12         # number of attention heads in MSA
+# MLP_RATIO = 4          # MLP hidden dim = EMBED_DIM * MLP_RATIO = 3072
+# NUM_LAYERS = 12        # L — number of stacked Transformer Encoder blocks
+# NUM_CLASSES = 3        # output classes (pizza / steak / sushi)
+# DROPOUT = 0.1
+
+# ── Equation 1 — PatchEmbedding layer ────────────────────────────────────────────────
+# class PatchEmbedding(nn.Module):
+#     def __init__(self, in_channels, patch_size, embed_dim):
+#         # Option A — Conv2d trick: kernel_size=patch_size, stride=patch_size
+#         #   projects each non-overlapping patch directly to embed_dim in one step
+#         self.proj = nn.Conv2d(in_channels,
+#                               embed_dim,
+#                               kernel_size=patch_size,
+#                               stride=patch_size)
+#         # Option B — explicit flatten + Linear (more literal to the paper):
+#         # self.proj = nn.Linear(patch_size * patch_size * in_channels, embed_dim)
+#
+#         self.cls_token  = nn.Parameter(torch.zeros(1, 1, embed_dim))   # x_class
+#         self.pos_embed  = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))  # E_pos
+#
+#     def forward(self, x):                     # x: [B, C, H, W]
+#         x = self.proj(x)                      # [B, embed_dim, H/P, W/P]
+#         x = x.flatten(2).transpose(1, 2)      # [B, N, embed_dim]   (N = num_patches)
+#         cls = self.cls_token.expand(B, -1, -1)# [B, 1, embed_dim]
+#         x = torch.cat([cls, x], dim=1)        # [B, N+1, embed_dim]  prepend [class]
+#         x = x + self.pos_embed                # [B, N+1, embed_dim]  + positional emb
+#         return x                              # z₀
+
+# ── Equation 2 — MSA sub-layer (inside one TransformerEncoderBlock) ──────────────────
+# class MSABlock(nn.Module):
+#     def __init__(self, embed_dim, num_heads, dropout):
+#         self.norm = nn.LayerNorm(embed_dim)                      # LN before attention
+#         self.attn = nn.MultiheadAttention(embed_dim,
+#                                           num_heads,
+#                                           dropout=dropout,
+#                                           batch_first=True)
+#
+#     def forward(self, x):                     # x = z_{ℓ-1}: [B, N+1, D]
+#         normed = self.norm(x)                 # LN(z_{ℓ-1})
+#         attn_out, _ = self.attn(normed, normed, normed)  # MSA(...)
+#         return attn_out + x                   # z'_ℓ  — residual connection
+
+# ── Equation 3 — MLP sub-layer (inside one TransformerEncoderBlock) ──────────────────
+# class MLPBlock(nn.Module):
+#     def __init__(self, embed_dim, mlp_ratio, dropout):
+#         hidden_dim = int(embed_dim * mlp_ratio)               # 768 * 4 = 3072
+#         self.norm = nn.LayerNorm(embed_dim)                   # LN before MLP
+#         self.mlp  = nn.Sequential(
+#             nn.Linear(embed_dim, hidden_dim),
+#             nn.GELU(),                                        # paper uses GELU
+#             nn.Dropout(dropout),
+#             nn.Linear(hidden_dim, embed_dim),
+#             nn.Dropout(dropout),
+#         )
+#
+#     def forward(self, x):                     # x = z'_ℓ: [B, N+1, D]
+#         return self.mlp(self.norm(x)) + x     # z_ℓ  — residual connection
+
+# ── One full Transformer Encoder Block = Eq.2 + Eq.3 ────────────────────────────────
+# class TransformerEncoderBlock(nn.Module):
+#     def __init__(self, embed_dim, num_heads, mlp_ratio, dropout):
+#         self.msa_block = MSABlock(embed_dim, num_heads, dropout)
+#         self.mlp_block = MLPBlock(embed_dim, mlp_ratio, dropout)
+#
+#     def forward(self, x):
+#         x = self.msa_block(x)   # Equation 2
+#         x = self.mlp_block(x)   # Equation 3
+#         return x
+
+# ── Equation 4 — Classification Head ─────────────────────────────────────────────────
+# class ViT(nn.Module):
+#     def __init__(self, ...):
+#         self.patch_embed = PatchEmbedding(...)               # Equation 1
+#         self.encoder     = nn.Sequential(
+#             *[TransformerEncoderBlock(...) for _ in range(NUM_LAYERS)]
+#         )                                                    # Equations 2 & 3, × L
+#         self.norm        = nn.LayerNorm(EMBED_DIM)           # final LN  (Eq. 4)
+#         self.head        = nn.Linear(EMBED_DIM, NUM_CLASSES) # MLP Head
+#
+#     def forward(self, x):                     # x: [B, C, H, W]
+#         x = self.patch_embed(x)               # Eq.1  -> [B, N+1, D]
+#         x = self.encoder(x)                   # Eq.2+3 × L -> [B, N+1, D]
+#         cls_out = self.norm(x[:, 0])          # Eq.4  -> [B, D]  (class token only)
+#         logits  = self.head(cls_out)          # -> [B, NUM_CLASSES]
+#         return logits
 """
