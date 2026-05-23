@@ -72,7 +72,7 @@ ax.axis("off")
 save_path = Path(
     "lessons/section10_pytorch_paper_replicating/src/a_line_72_train_sample_image.png"
 )
-fig.savefig(save_path)
+# fig.savefig(save_path)
 plt.close(fig)
 print(f"Saved sample image to {save_path}")
 
@@ -288,3 +288,59 @@ PSEUDO CODE — mapping each equation to PyTorch building blocks
 #         logits  = self.head(cls_out)          # -> [B, NUM_CLASSES]
 #         return logits
 """
+
+"""
+In table one of the ViT paper, we have different variants of the ViT architecture (ViT-Base, ViT-Large, ViT-Huge) with different hyperparameters. For this example, 
+we'll be replicating the ViT-Base architecture which has the following hyperparameters:
+  - Image size: 224 x 224
+  - Patch size: 16 x 16
+  - Embedding dimension (Hidden size): 768 (transform the 16x16 patches into 768-dimensional vectors)
+  - Number of heads: 12
+  - Layer depth: 12 (number of stacked Transformer Encoder blocks)
+  - MLP size: 3072 (the hidden dimension of the MLP in the Transformer Encoder blocks, which is typically 4x the embedding dimension)
+    MLP is a feedforward network that processes each token independently after the attention mechanism has mixed information across tokens.
+"""
+
+
+"""
+Equation 1 — Patch + Position Embedding (input preparation):
+Input shape: [B, C, H, W] -> Output shape: [B, N+1, D]
+  - B: batch size
+  - C: number of channels (3 for RGB)
+  - H, W: image height and width (224 x 224)
+  - N: number of patches = (H / P) * (W / P) = (224 / 16) * (224 / 16) = 14 * 14 = 196
+  - P: patch size (16)
+  - D: embedding dimension (768)
+"""
+# Calculate the number of patches (N) based on the image size and patch size
+height = 224
+width = 224
+color_channels = 3
+patch_size = 16
+number_of_patches = (height // patch_size) * (width // patch_size)  # = 196
+print(f"Number of patches (N): {number_of_patches}")
+
+embedding_layer_input_shape = (height, width, color_channels)
+embedding_layer_output_shape = (
+    number_of_patches,
+    patch_size**2 * color_channels,
+)  # (N, D)
+print(
+    f"Embedding layer input shape (H, W, C), a 2D image: {embedding_layer_input_shape}"
+)
+print(
+    f"Embedding layer output shape (N, D), single 1D sequence per patch: {embedding_layer_output_shape}"
+)
+
+"""
+4.2 Turn a single image into a sequence of patches and visualize the output of the embedding layer
+"""
+# View a single image
+images, labels = next(iter(train_dataloader))
+image = images[0]  # shape: [C, H, W], float32 in [0, 1]
+print(f"Original image shape: {image.shape}")
+plt.imshow(image.permute(1, 2, 0))  # CHW -> HWC
+plt.title(f"Original Image - Label: {class_names[labels[0]]}")
+plt.axis("off")
+# plt.show()
+plt.close()
