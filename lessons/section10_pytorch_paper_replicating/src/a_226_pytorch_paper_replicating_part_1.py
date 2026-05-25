@@ -344,3 +344,63 @@ plt.title(f"Original Image - Label: {class_names[labels[0]]}")
 plt.axis("off")
 # plt.show()
 plt.close()
+
+# Plot the patched image, using matplotlib's subplot to visualize the patches
+num_patches_per_dim = height // patch_size  # 224 // 16 = 14
+fig, axes = plt.subplots(num_patches_per_dim, num_patches_per_dim, figsize=(10, 10))
+print(
+    f"Number of patches per dimension: {num_patches_per_dim} (total patches: {num_patches_per_dim**2})"
+)
+for i in range(num_patches_per_dim):
+    for j in range(num_patches_per_dim):
+        patch = image[
+            :,
+            i * patch_size : (i + 1) * patch_size,
+            j * patch_size : (j + 1) * patch_size,
+        ]
+        axes[i, j].imshow(patch.permute(1, 2, 0))  # CHW -> HWC
+        axes[i, j].axis("off")
+plt.suptitle("Image split into 16x16 patches")
+# plt.show()
+# plt.savefig(
+#     "lessons/section10_pytorch_paper_replicating/src/a_line_362_image_split_into_patches.png"
+# )
+plt.close(fig)
+print("Visualized the image split into 16x16 patches.")
+
+
+"""
+4.3 Understanding the patch embedding layer using a Conv2d 
+to turn patches into embeddings and visualize the output shape
+"""
+# Create patch embedding layer using conv2d with kernel_size=patch_size and stride=patch_size
+embed_dim = 768  # D — ViT-Base hidden size (design hyperparameter)
+
+patch_proj = nn.Conv2d(
+    in_channels=color_channels,  # 3 (RGB)
+    out_channels=embed_dim,  # 768 filters — this IS the projection matrix E ∈ ℝ^(P²C × D)
+    kernel_size=patch_size,  # 16 — each filter covers one full patch
+    stride=patch_size,  # 16 — non-overlapping: jump exactly one patch at a time
+)
+
+# Pass a single image through the projection layer (add batch dim with unsqueeze)
+# image shape: [C, H, W] = [3, 224, 224]
+image_batch = image.unsqueeze(0)  # [1, 3, 224, 224]
+
+# (batch size, embed_dim, num_patches_per_dim, num_patches_per_dim)
+x_proj = patch_proj(image_batch)  # [1, 768, 14, 14]
+print(
+    f"x_proj (after Conv2d)        : {x_proj.shape}"
+)  # projected spatial maps — NOT yet a sequence
+
+# flatten dims 2+ (the spatial 14×14 grid → 196)
+flatten = nn.Flatten(start_dim=2, end_dim=3)
+x_flat = flatten(x_proj)  # [1, 768, 196]
+print(
+    f"x_flat (after nn.Flatten)    : {x_flat.shape}"
+)  # spatially flattened — axes still [B, D, N]
+
+patch_embeddings = x_flat.transpose(1, 2)  # [1, 196, 768]
+print(
+    f"patch_embeddings (after transpose)   : {patch_embeddings.shape}"
+)  # [B, N, D] — the actual x_pⁱ·E vectors (Eq.1, before cls + pos)
