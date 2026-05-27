@@ -404,3 +404,41 @@ patch_embeddings = x_flat.transpose(1, 2)  # [1, 196, 768]
 print(
     f"patch_embeddings (after transpose)   : {patch_embeddings.shape}"
 )  # [B, N, D] — the actual x_pⁱ·E vectors (Eq.1, before cls + pos)
+
+
+# Create the patch embedding layer using a linear layer (alternative to Conv2d)
+class PatchEmbedding(nn.Module):
+    def __init__(
+        self, in_channels: int = 3, patch_size: int = 16, embed_dim: int = 768
+    ):
+        super().__init__()
+
+        self.patch_size = patch_size
+        # Using Conv2d trick: kernel_size=patch_size, stride=patch_size
+        #   projects each non-overlapping patch directly to embed_dim in one step
+        self.proj = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=embed_dim,
+            kernel_size=patch_size,
+            stride=patch_size,
+            padding=0,
+        )
+        self.flatten = nn.Flatten(start_dim=2, end_dim=3)  # flatten spatial dims
+
+    def forward(self, x):  # x: [B, C, H, W]
+        # Create assertion to check that inputs are the correct shape
+        image_resolution = x.shape[-1]
+        assert image_resolution % self.patch_size == 0, f"Input image size must be divisible by patch size, image shape: {image_resolution}, patch size: {self.patch_size}"
+
+        x = self.proj(x)       # [B, embed_dim, H/P, W/P]
+        x = self.flatten(x)    # [B, embed_dim, Num_Patches]     ← spatial grid → flat sequence, axes still [B, D, N]
+        x = x.transpose(1, 2)  # [B, Num_Patches, embed_dim]     ← swap to token-first order
+        return x
+
+set_seeds()
+patch_embedding_layer = PatchEmbedding(in_channels=color_channels, patch_size=patch_size, embed_dim=embed_dim)
+patch_embeddings = patch_embedding_layer(image_batch)
+print(
+    f"patch_embeddings (after PatchEmbedding layer)   : {patch_embeddings.shape}"
+)  # [B, N, D] — the actual x_pⁱ·E vectors (Eq.1, before cls + pos)
+
