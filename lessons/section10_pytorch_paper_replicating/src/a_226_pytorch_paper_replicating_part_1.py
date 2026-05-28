@@ -409,13 +409,18 @@ print(
 # Create the patch embedding layer using a linear layer (alternative to Conv2d)
 class PatchEmbedding(nn.Module):
     def __init__(
-        self, in_channels: int = 3, patch_size: int = 16, embed_dim: int = 768
+        self,
+        in_channels: int = 3,
+        patch_size: int = 16,
+        embed_dim: int = 768,
+        img_size: int = 224,
     ):
         super().__init__()
 
         self.patch_size = patch_size
-        # Using Conv2d trick: kernel_size=patch_size, stride=patch_size
-        #   projects each non-overlapping patch directly to embed_dim in one step
+        num_patches = (img_size // patch_size) ** 2  # e.g. (224 // 16)² = 196
+
+        # ── Projection: Conv2d maps each patch → embed_dim vector (the E matrix in Eq.1)
         self.proj = nn.Conv2d(
             in_channels=in_channels,
             out_channels=embed_dim,
@@ -423,16 +428,38 @@ class PatchEmbedding(nn.Module):
             stride=patch_size,
             padding=0,
         )
-        self.flatten = nn.Flatten(start_dim=2, end_dim=3)  # flatten spatial dims
+        self.flatten = nn.Flatten(start_dim=2, end_dim=3)  # collapse spatial 14×14 → 196
+
+        # ── Class token (x_class in Eq.1)
+        # A single learnable vector prepended at position 0.
+        # It attends to all patch tokens across all layers and accumulates
+        # global image information — only this token is used for classification (Eq.4).
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim), requires_grad=True)
+
+        # ── Positional embeddings (E_pos in Eq.1)
+        # Self-attention is permutation-invariant — without this, the model cannot
+        # distinguish patch position 0 (top-left) from patch position 195 (bottom-right).
+        # Shape: [1, N+1, embed_dim] — one learnable vector per token (patches + cls).
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim), requires_grad=True)
 
     def forward(self, x):  # x: [B, C, H, W]
-        # Create assertion to check that inputs are the correct shape
+        B = x.shape[0]
         image_resolution = x.shape[-1]
-        assert image_resolution % self.patch_size == 0, f"Input image size must be divisible by patch size, image shape: {image_resolution}, patch size: {self.patch_size}"
+        assert image_resolution % self.patch_size == 0, (
+            f"Input image size must be divisible by patch size, "
+            f"image shape: {image_resolution}, patch size: {self.patch_size}"
+        )
 
-        x = self.proj(x)       # [B, embed_dim, H/P, W/P]
-        x = self.flatten(x)    # [B, embed_dim, Num_Patches]     ← spatial grid → flat sequence, axes still [B, D, N]
-        x = x.transpose(1, 2)  # [B, Num_Patches, embed_dim]     ← swap to token-first order
+        x = self.proj(x)       # [B, embed_dim, H/P, W/P]   — projection (x_pⁱ · E)
+        x = self.flatten(x)    # [B, embed_dim, N]            — spatial grid → flat sequence
+        x = x.transpose(1, 2)  # [B, N, embed_dim]            — token-first order
+
+        # Prepend class token: expand to batch size, then cat at sequence position 0
+        cls_tokens = self.cls_token.expand(B, -1, -1)   # [B, 1, embed_dim]
+        x = torch.cat([cls_tokens, x], dim=1)           # [B, N+1, embed_dim]
+
+        # Add positional embeddings element-wise — injects spatial order into each token
+        x = x + self.pos_embed                          # [B, N+1, embed_dim]  ← z₀ (Eq.1)
         return x
 
 set_seeds()
