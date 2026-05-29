@@ -428,7 +428,9 @@ class PatchEmbedding(nn.Module):
             stride=patch_size,
             padding=0,
         )
-        self.flatten = nn.Flatten(start_dim=2, end_dim=3)  # collapse spatial 14×14 → 196
+        self.flatten = nn.Flatten(
+            start_dim=2, end_dim=3
+        )  # collapse spatial 14×14 → 196
 
         # ── Class token (x_class in Eq.1)
         # A single learnable vector prepended at position 0.
@@ -440,7 +442,9 @@ class PatchEmbedding(nn.Module):
         # Self-attention is permutation-invariant — without this, the model cannot
         # distinguish patch position 0 (top-left) from patch position 195 (bottom-right).
         # Shape: [1, N+1, embed_dim] — one learnable vector per token (patches + cls).
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim), requires_grad=True)
+        self.pos_embed = nn.Parameter(
+            torch.zeros(1, num_patches + 1, embed_dim), requires_grad=True
+        )
 
     def forward(self, x):  # x: [B, C, H, W]
         B = x.shape[0]
@@ -450,22 +454,52 @@ class PatchEmbedding(nn.Module):
             f"image shape: {image_resolution}, patch size: {self.patch_size}"
         )
 
-        x = self.proj(x)       # [B, embed_dim, H/P, W/P]   — projection (x_pⁱ · E)
-        x = self.flatten(x)    # [B, embed_dim, N]            — spatial grid → flat sequence
+        x = self.proj(x)  # [B, embed_dim, H/P, W/P]   — projection (x_pⁱ · E)
+        x = self.flatten(
+            x
+        )  # [B, embed_dim, N]            — spatial grid → flat sequence
         x = x.transpose(1, 2)  # [B, N, embed_dim]            — token-first order
 
         # Prepend class token: expand to batch size, then cat at sequence position 0
-        cls_tokens = self.cls_token.expand(B, -1, -1)   # [B, 1, embed_dim]
-        x = torch.cat([cls_tokens, x], dim=1)           # [B, N+1, embed_dim]
+        cls_tokens = self.cls_token.expand(B, -1, -1)  # [B, 1, embed_dim]
+        x = torch.cat([cls_tokens, x], dim=1)  # [B, N+1, embed_dim]
 
         # Add positional embeddings element-wise — injects spatial order into each token
-        x = x + self.pos_embed                          # [B, N+1, embed_dim]  ← z₀ (Eq.1)
+        x = x + self.pos_embed  # [B, N+1, embed_dim]  ← z₀ (Eq.1)
         return x
 
+
 set_seeds()
-patch_embedding_layer = PatchEmbedding(in_channels=color_channels, patch_size=patch_size, embed_dim=embed_dim)
+patch_embedding_layer = PatchEmbedding(
+    in_channels=color_channels, patch_size=patch_size, embed_dim=embed_dim
+)
 patch_embeddings = patch_embedding_layer(image_batch)
 print(
     f"patch_embeddings (after PatchEmbedding layer)   : {patch_embeddings.shape}"
 )  # [B, N, D] — the actual x_pⁱ·E vectors (Eq.1, before cls + pos)
 
+"""
+4.4 Multi-Head Self-Attention (MSA) sub-layer (for layer ℓ):
+Input shape: [B, N+1, D] -> Output shape: [B, N+1, D]
+  - B: batch size
+  - N: number of patches (196) + 1 class token = 197 tokens
+  - D: embedding dimension (768)
+  - MSA: Multi-Head Self-Attention — each token attends to every other token
+"""
+
+
+class MSABlock(nn.Module):
+    def __init__(self, embed_dim: int = 768, num_heads: int = 12, dropout: float = 0.1):
+        super().__init__()
+        self.norm = nn.LayerNorm(embed_dim)  # LN before attention
+        self.attn = nn.MultiheadAttention(
+            embed_dim=embed_dim,
+            num_heads=num_heads,
+            dropout=dropout,
+            batch_first=True,  # use batch-first format [B, N, D]
+        )
+
+    def forward(self, x):  # x = z_{ℓ-1}: [B, N+1, D]
+        normed = self.norm(x)  # LN(z_{ℓ-1})
+        attn_out, _ = self.attn(normed, normed, normed)  # MSA(...)
+        return attn_out + x  # z'_ℓ  — residual connection
