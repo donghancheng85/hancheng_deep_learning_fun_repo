@@ -285,10 +285,22 @@ def train_for_summarywriter(
 
     # Add model graph once after training (graph doesn't change between epochs)
     if writer is not None:
-        writer.add_graph(
-            model=model,
-            input_to_model=torch.randn(32, 3, 224, 224).to(device),
-        )
+        # nn.MultiheadAttention has internal Python control flow that makes
+        # torch.jit.trace produce structurally different graphs on the two
+        # sanity-check passes — this is unfixable via strict=False.
+        # Wrap in try/except so scalar metrics are always saved even if the
+        # graph tab cannot be populated.
+        model.eval()
+        try:
+            writer.add_graph(
+                model=model,
+                input_to_model=torch.randn(32, 3, 224, 224).to(device),
+                use_strict_trace=False,
+            )
+        except Exception as e:
+            print(
+                "[TensorBoard] Skipping add_graph — not compatible"
+            )
         writer.close()
 
     return {

@@ -491,7 +491,7 @@ Input shape: [B, N+1, D] -> Output shape: [B, N+1, D]
 class MSABlock(nn.Module):
     def __init__(self, embed_dim: int = 768, num_heads: int = 12, dropout: float = 0.1):
         super().__init__()
-        self.norm = nn.LayerNorm(embed_dim)  # LN before attention
+        self.norm = nn.LayerNorm(normalized_shape=embed_dim)  # LN before attention
         self.attn = nn.MultiheadAttention(
             embed_dim=embed_dim,
             num_heads=num_heads,
@@ -503,6 +503,7 @@ class MSABlock(nn.Module):
         normed = self.norm(x)  # LN(z_{ℓ-1})
         attn_out, _ = self.attn(normed, normed, normed)  # MSA(...)
         return attn_out + x  # z'_ℓ  — residual connection
+
 
 # Create a sample input tensor with the shape of the patch embeddings
 sample_input = torch.randn(1, number_of_patches + 1, embed_dim)
@@ -519,13 +520,22 @@ Input shape: [B, N+1, D] -> Output shape: [B, N+1, D]
   - MLP: Two linear layers with a GELU activation in between
     (expands D -> 4D then projects back 4D -> D)
 """
+
+
 class MLPBlock(nn.Module):
-    def __init__(
-        self, embed_dim: int = 768, mlp_ratio: int = 4, dropout: float = 0.1
-    ):
+    def __init__(self, embed_dim: int = 768, mlp_ratio: int = 4, dropout: float = 0.1):
         super().__init__()
+        # mlp_ratio controls the expansion factor of the hidden layer inside the MLP.
+        # The MLP first projects UP from embed_dim → hidden_dim (a wider representation),
+        # applies GELU non-linearity, then projects back DOWN to embed_dim.
+        # This "bottleneck-expand-compress" pattern gives the MLP more capacity to learn
+        # complex per-token transformations without changing the sequence shape.
+        #
+        # ViT-Base uses mlp_ratio=4:  768 → 3072 → 768
+        # ViT-Large uses mlp_ratio=4: 1024 → 4096 → 1024
+        # You can lower it (e.g. 2) to reduce parameters, or raise it for more capacity.
         hidden_dim = int(embed_dim * mlp_ratio)  # e.g. 768 * 4 = 3072
-        self.norm = nn.LayerNorm(embed_dim)  # LN before MLP
+        self.norm = nn.LayerNorm(normalized_shape=embed_dim)  # LN before MLP
         self.mlp = nn.Sequential(
             nn.Linear(embed_dim, hidden_dim),
             nn.GELU(),  # paper uses GELU activation
@@ -536,3 +546,111 @@ class MLPBlock(nn.Module):
 
     def forward(self, x):  # x = z'_ℓ: [B, N+1, D]
         return self.mlp(self.norm(x)) + x  # z_ℓ  — residual connection
+
+
+# ── One full Transformer Encoder Block = Eq.2 + Eq.3 ────────────────────────────────
+class TransformerEncoderBlock(nn.Module):
+    def __init__(
+        self,
+        embed_dim: int = 768,
+        num_heads: int = 12,
+        mlp_ratio: int = 4,
+        dropout: float = 0.1,
+    ):
+        super().__init__()
+        self.msa_block = MSABlock(
+            embed_dim=embed_dim, num_heads=num_heads, dropout=dropout
+        )
+        self.mlp_block = MLPBlock(
+            embed_dim=embed_dim, mlp_ratio=mlp_ratio, dropout=dropout
+        )
+
+    def forward(self, x):  # x: [B, N+1, D]
+        x = self.msa_block(x)  # Equation 2 — z'_ℓ
+        x = self.mlp_block(x)  # Equation 3 — z_ℓ
+        return x
+
+
+"""
+4.6 Assemble the full ViT model (Equations 1–4):
+Input shape: [B, C, H, W] -> Output shape: [B, NUM_CLASSES]
+  - Stack L=12 TransformerEncoderBlocks (Eq.2 + Eq.3 × 12)
+  - Extract only the class token from the final layer output (Eq.4)
+  - Pass through a final LayerNorm + Linear head -> class logits
+"""
+
+
+class ViT(nn.Module):
+    def __init__(
+        self,
+        img_size: int = 224,
+        in_channels: int = 3,
+        patch_size: int = 16,
+        embed_dim: int = 768,
+        num_heads: int = 12,
+        num_layers: int = 12,
+        mlp_ratio: int = 4,
+        num_classes: int = 3,
+        dropout: float = 0.1,
+    ):
+        super().__init__()
+
+        # ── Equation 1 — patch + positional embedding
+        self.patch_embed = PatchEmbedding(
+            in_channels=in_channels,
+            patch_size=patch_size,
+            embed_dim=embed_dim,
+            img_size=img_size,
+        )
+
+        # ── Equations 2 & 3 — stack L Transformer Encoder blocks
+        self.encoder = nn.Sequential(
+            *[
+                TransformerEncoderBlock(
+                    embed_dim=embed_dim,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    dropout=dropout,
+                )
+                for _ in range(num_layers)
+            ]
+        )
+
+        # ── Equation 4 — final LayerNorm + classification head
+        # Only the class token (index 0) is used for prediction.
+        self.norm = nn.LayerNorm(normalized_shape=embed_dim)  # final LN
+        self.head = nn.Linear(embed_dim, num_classes)  # MLP head -> logits
+
+    def forward(self, x):  # x: [B, C, H, W]
+        x = self.patch_embed(x)  # Eq.1  → [B, N+1, D]   z₀
+        x = self.encoder(x)  # Eq.2+3 × L → [B, N+1, D]   z_L
+        cls_out = self.norm(x[:, 0])  # Eq.4  → [B, D]  class token only (index 0)
+        logits = self.head(cls_out)  #        → [B, num_classes]
+        return logits
+
+
+set_seeds()
+vit = ViT(
+    img_size=IMAGE_SIZE,
+    in_channels=color_channels,
+    patch_size=patch_size,
+    embed_dim=embed_dim,
+    num_heads=12,
+    num_layers=12,
+    mlp_ratio=4,
+    num_classes=len(class_names),
+    dropout=0.1,
+)
+logits = vit(image_batch)
+print(f"ViT output (logits) shape: {logits.shape}")  # [B, num_classes] = [1, 3]
+print(f"ViT output (logits)      : {logits}")
+
+# ── torchinfo summary ─────────────────────────────────────────────────────────────────
+# input_size: (batch_size, channels, height, width)
+summary(
+    model=vit,
+    input_size=(BATCH_SIZE, color_channels, IMAGE_SIZE, IMAGE_SIZE),
+    col_names=["input_size", "output_size", "num_params", "trainable"],
+    col_width=20,
+    row_settings=["var_names"],
+)

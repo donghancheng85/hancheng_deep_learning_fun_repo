@@ -1,0 +1,97 @@
+/home/donghancheng85/gitrepo/hancheng_deep_learning_fun_repo/.venv/lib/python3.12/site-packages/torch/cuda/__init__.py:1007: UserWarning: Can't initialize NVML
+  raw_cnt = _raw_device_count_nvml()
+Using CUDA: NVIDIA GeForce RTX 5080
+Class names: ['pizza', 'steak', 'sushi']
+Train batches: 8 | Test batches: 3
+
+Model: ViT
+Parameters: 85,800,963
+TensorBoard logs → lessons/section10_pytorch_paper_replicating/runs/ViT_2026-05-30_11-30-55
+
+Training ViT for 10 epochs on cuda...
+  0%|          | 0/10 [00:00<?, ?it/s]Epoch 1/10
+Train loss: 3.89143 | Train accuracy: 33.59%
+ 10%|█         | 1/10 [00:01<00:14,  1.62s/it]
+Test loss: 1.44281, Test accuracy: 54.17%
+
+Epoch 0 metrics:
+Train loss: 3.89143, Train accuracy: 33.5938%
+Test loss: 1.44281, Test accuracy: 54.1667%
+Epoch 2/10
+Train loss: 1.71239 | Train accuracy: 26.56%
+ 20%|██        | 2/10 [00:03<00:12,  1.50s/it]
+Test loss: 1.30391, Test accuracy: 54.17%
+
+Epoch 1 metrics:
+Train loss: 1.71239, Train accuracy: 26.5625%
+Test loss: 1.30391, Test accuracy: 54.1667%
+Epoch 3/10
+Train loss: 1.86757 | Train accuracy: 23.05%
+ 30%|███       | 3/10 [00:04<00:10,  1.47s/it]
+Test loss: 1.62121, Test accuracy: 19.79%
+
+Epoch 2 metrics:
+Train loss: 1.86757, Train accuracy: 23.0469%
+Test loss: 1.62121, Test accuracy: 19.7917%
+Epoch 4/10
+Train loss: 1.53962 | Train accuracy: 25.39%
+ 40%|████      | 4/10 [00:05<00:08,  1.45s/it]
+Test loss: 1.28130, Test accuracy: 19.79%
+
+Epoch 3 metrics:
+Train loss: 1.53962, Train accuracy: 25.3906%
+Test loss: 1.28130, Test accuracy: 19.7917%
+Epoch 5/10
+Train loss: 1.15472 | Train accuracy: 29.69%
+ 50%|█████     | 5/10 [00:07<00:07,  1.44s/it]
+Test loss: 1.32236, Test accuracy: 26.04%
+
+Epoch 4 metrics:
+Train loss: 1.15472, Train accuracy: 29.6875%
+Test loss: 1.32236, Test accuracy: 26.0417%
+Epoch 6/10
+Train loss: 1.32708 | Train accuracy: 29.30%
+ 60%|██████    | 6/10 [00:08<00:05,  1.44s/it]
+Test loss: 1.05577, Test accuracy: 54.17%
+
+Epoch 5 metrics:
+Train loss: 1.32708, Train accuracy: 29.2969%
+Test loss: 1.05577, Test accuracy: 54.1667%
+Epoch 7/10
+Train loss: 1.11099 | Train accuracy: 37.89%
+ 70%|███████   | 7/10 [00:10<00:04,  1.44s/it]
+Test loss: 1.21104, Test accuracy: 54.17%
+
+Epoch 6 metrics:
+Train loss: 1.11099, Train accuracy: 37.8906%
+Test loss: 1.21104, Test accuracy: 54.1667%
+Epoch 8/10
+Train loss: 1.32515 | Train accuracy: 25.78%
+ 80%|████████  | 8/10 [00:11<00:02,  1.44s/it]
+Test loss: 1.50249, Test accuracy: 19.79%
+
+Epoch 7 metrics:
+Train loss: 1.32515, Train accuracy: 25.7812%
+Test loss: 1.50249, Test accuracy: 19.7917%
+Epoch 9/10
+Train loss: 1.19440 | Train accuracy: 30.86%
+ 90%|█████████ | 9/10 [00:13<00:01,  1.44s/it]
+Test loss: 1.10326, Test accuracy: 26.04%
+
+Epoch 8 metrics:
+Train loss: 1.19440, Train accuracy: 30.8594%
+Test loss: 1.10326, Test accuracy: 26.0417%
+Epoch 10/10
+Train loss: 1.09950 | Train accuracy: 42.58%
+100%|██████████| 10/10 [00:14<00:00,  1.49s/it]100%|██████████| 10/10 [00:14<00:00,  1.46s/it]
+
+Test loss: 1.10491, Test accuracy: 26.04%
+
+Epoch 9 metrics:
+Train loss: 1.09950, Train accuracy: 42.5781%
+Test loss: 1.10491, Test accuracy: 26.0417%
+[TensorBoard] Skipping add_graph — not compatible
+
+Training time: 15.31s (0.26 min | 1.53s/epoch)
+
+Model saved to: lessons/section10_pytorch_paper_replicating/models/vit_pizza_steak_sushi_model_1_training_raw.pth

@@ -1,0 +1,79 @@
+/home/donghancheng85/gitrepo/hancheng_deep_learning_fun_repo/.venv/lib/python3.12/site-packages/torch/cuda/__init__.py:1007: UserWarning: Can't initialize NVML
+  raw_cnt = _raw_device_count_nvml()
+Using CUDA: NVIDIA GeForce RTX 5080
+torchvision version: 0.25.0+cu128
+Number of classes: 3
+Class names: ['pizza', 'steak', 'sushi']
+Number of batches in train dataloader: 8
+Number of batches in test dataloader: 3
+Saved sample image to lessons/section10_pytorch_paper_replicating/src/a_line_72_train_sample_image.png
+Number of patches (N): 196
+Embedding layer input shape (H, W, C), a 2D image: (224, 224, 3)
+Embedding layer output shape (N, D), single 1D sequence per patch: (196, 768)
+Original image shape: torch.Size([3, 224, 224])
+Number of patches per dimension: 14 (total patches: 196)
+Visualized the image split into 16x16 patches.
+x_proj (after Conv2d)        : torch.Size([1, 768, 14, 14])
+x_flat (after nn.Flatten)    : torch.Size([1, 768, 196])
+patch_embeddings (after transpose)   : torch.Size([1, 196, 768])
+patch_embeddings (after PatchEmbedding layer)   : torch.Size([1, 197, 768])
+MSA output shape: torch.Size([1, 197, 768])
+ViT output (logits) shape: torch.Size([1, 3])
+ViT output (logits)      : tensor([[-0.6281, -0.1831, -0.9416]], grad_fn=<AddmmBackward0>)
+==================================================================================================================================
+Layer (type (var_name))                            Input Shape          Output Shape         Param #              Trainable
+==================================================================================================================================
+ViT (ViT)                                          [32, 3, 224, 224]    [32, 3]              --                   True
+├─PatchEmbedding (patch_embed)                     [32, 3, 224, 224]    [32, 197, 768]       152,064              True
+│    └─Conv2d (proj)                               [32, 3, 224, 224]    [32, 768, 14, 14]    590,592              True
+│    └─Flatten (flatten)                           [32, 768, 14, 14]    [32, 768, 196]       --                   --
+├─Sequential (encoder)                             [32, 197, 768]       [32, 197, 768]       --                   True
+│    └─TransformerEncoderBlock (0)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (1)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (2)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (3)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (4)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (5)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (6)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (7)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (8)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (9)                 [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (10)                [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+│    └─TransformerEncoderBlock (11)                [32, 197, 768]       [32, 197, 768]       --                   True
+│    │    └─MSABlock (msa_block)                   [32, 197, 768]       [32, 197, 768]       2,363,904            True
+│    │    └─MLPBlock (mlp_block)                   [32, 197, 768]       [32, 197, 768]       4,723,968            True
+├─LayerNorm (norm)                                 [32, 768]            [32, 768]            1,536                True
+├─Linear (head)                                    [32, 768]            [32, 3]              2,307                True
+==================================================================================================================================
+Total params: 85,800,963
+Trainable params: 85,800,963
+Non-trainable params: 0
+Total mult-adds (Units.GIGABYTES): 5.52
+==================================================================================================================================
+Input size (MB): 19.27
+Forward/backward pass size (MB): 3292.20
+Params size (MB): 229.20
+Estimated Total Size (MB): 3540.67
+==================================================================================================================================
