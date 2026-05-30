@@ -503,3 +503,36 @@ class MSABlock(nn.Module):
         normed = self.norm(x)  # LN(z_{ℓ-1})
         attn_out, _ = self.attn(normed, normed, normed)  # MSA(...)
         return attn_out + x  # z'_ℓ  — residual connection
+
+# Create a sample input tensor with the shape of the patch embeddings
+sample_input = torch.randn(1, number_of_patches + 1, embed_dim)
+msa_block = MSABlock(embed_dim=embed_dim, num_heads=12, dropout=0.1)
+msa_output = msa_block(sample_input)
+print(f"MSA output shape: {msa_output.shape}")  # [B, N+1, D]
+
+"""
+4.5 Create the MLP (Feed-Forward) sub-layer (for layer ℓ):
+Input shape: [B, N+1, D] -> Output shape: [B, N+1, D]
+  - B: batch size
+  - N: number of patches (196) + 1 class token = 197 tokens
+  - D: embedding dimension (768)
+  - MLP: Two linear layers with a GELU activation in between
+    (expands D -> 4D then projects back 4D -> D)
+"""
+class MLPBlock(nn.Module):
+    def __init__(
+        self, embed_dim: int = 768, mlp_ratio: int = 4, dropout: float = 0.1
+    ):
+        super().__init__()
+        hidden_dim = int(embed_dim * mlp_ratio)  # e.g. 768 * 4 = 3072
+        self.norm = nn.LayerNorm(embed_dim)  # LN before MLP
+        self.mlp = nn.Sequential(
+            nn.Linear(embed_dim, hidden_dim),
+            nn.GELU(),  # paper uses GELU activation
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, embed_dim),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, x):  # x = z'_ℓ: [B, N+1, D]
+        return self.mlp(self.norm(x)) + x  # z_ℓ  — residual connection
