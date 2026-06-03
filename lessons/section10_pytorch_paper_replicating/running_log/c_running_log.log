@@ -1,0 +1,5 @@
+Using CUDA: NVIDIA GeForce RTX 5080
+
+Loaded model from: lessons/section10_pytorch_paper_replicating/models/vit_pizza_steak_sushi_model_1_training_raw.pth
+Parameters: 85,800,963
+Class names: ['pizza', 'steak', 'sushi']

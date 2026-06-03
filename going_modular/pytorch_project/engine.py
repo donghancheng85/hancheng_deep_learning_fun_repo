@@ -298,9 +298,7 @@ def train_for_summarywriter(
                 use_strict_trace=False,
             )
         except Exception as e:
-            print(
-                "[TensorBoard] Skipping add_graph — not compatible"
-            )
+            print("[TensorBoard] Skipping add_graph — not compatible")
         writer.close()
 
     return {
