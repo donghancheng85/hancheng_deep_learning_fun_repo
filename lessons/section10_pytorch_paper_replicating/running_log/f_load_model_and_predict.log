@@ -1,0 +1,26 @@
+Using CUDA: NVIDIA GeForce RTX 5080
+
+Loading model from: lessons/section10_pytorch_paper_replicating/models/vit_b16_pretrained_pizza_steak_sushi_2026-06-02_20-16-23.pth
+Model loaded and set to eval mode.
+
+Transform: ImageClassification(
+    crop_size=[224]
+    resize_size=[256]
+    mean=[0.485, 0.456, 0.406]
+    std=[0.229, 0.224, 0.225]
+    interpolation=InterpolationMode.BILINEAR
+)
+
+Image path: lessons/section6_pytorch_custom_datasets/data/web_pizza_pic.jpg
+Raw image shape: torch.Size([3, 800, 800]) | dtype: torch.uint8
+Transformed image shape: torch.Size([1, 3, 224, 224]) | dtype: torch.float32
+
+── Prediction ──────────────────────────────
+  pizza   : 0.9917 ◄
+  steak   : 0.0056
+  sushi   : 0.0027
+
+  Predicted class : pizza
+  Confidence      : 99.17%
+
+Plot saved.

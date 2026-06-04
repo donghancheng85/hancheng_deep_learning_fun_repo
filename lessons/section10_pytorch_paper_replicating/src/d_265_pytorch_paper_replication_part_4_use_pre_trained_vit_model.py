@@ -25,7 +25,7 @@ LEARNING_RATE = 1e-3
 # ── Data ──────────────────────────────────────────────────────────────────────────────
 data_path = Path("going_modular/data/")
 train_dir = data_path / "pizza_steak_sushi" / "train"
-test_dir  = data_path / "pizza_steak_sushi" / "test"
+test_dir = data_path / "pizza_steak_sushi" / "test"
 
 # ── 1. Load pretrained ViT-B/16 from torchvision ─────────────────────────────────────
 # ViT_B_16_Weights.IMAGENET1K_V1 — pretrained on ImageNet-1k (1000 classes)
