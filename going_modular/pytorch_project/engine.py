@@ -297,7 +297,7 @@ def train_for_summarywriter(
                 input_to_model=torch.randn(32, 3, 224, 224).to(device),
                 use_strict_trace=False,
             )
-        except Exception as e:
+        except Exception:
             print("[TensorBoard] Skipping add_graph — not compatible")
         writer.close()
 

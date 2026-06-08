@@ -2,16 +2,15 @@ import torch
 import torchvision
 from torchvision.transforms import v2
 from pathlib import Path
-from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt
 
 from torch import nn
 
 from torchinfo import summary
 
-from going_modular.pytorch_project import data_setup, engine
+from going_modular.pytorch_project import data_setup
 from common.device import get_best_device, print_device_info
-from common.helper_fucntion import accuracy_fn, set_seeds, plot_loss_curves
+from common.helper_fucntion import set_seeds
 
 # set up device
 device = get_best_device()

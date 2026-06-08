@@ -1,0 +1,179 @@
+Using CUDA: NVIDIA GeForce RTX 5080
+
+Pretrained transform: ImageClassification(
+    crop_size=[384]
+    resize_size=[384]
+    mean=[0.485, 0.456, 0.406]
+    std=[0.229, 0.224, 0.225]
+    interpolation=InterpolationMode.BICUBIC
+)
+Class names: ['pizza', 'steak', 'sushi']
+Train batches: 15 | Test batches: 5
+
+── Original pretrained ViT-B/16 structure ──
+============================================================================================================================================
+Layer (type (var_name))                                      Input Shape          Output Shape         Param #              Trainable
+============================================================================================================================================
+VisionTransformer (VisionTransformer)                        [32, 3, 384, 384]    [32, 1000]           768                  True
+├─Conv2d (conv_proj)                                         [32, 3, 384, 384]    [32, 768, 24, 24]    590,592              True
+├─Encoder (encoder)                                          [32, 577, 768]       [32, 577, 768]       443,136              True
+│    └─Dropout (dropout)                                     [32, 577, 768]       [32, 577, 768]       --                   --
+│    └─Sequential (layers)                                   [32, 577, 768]       [32, 577, 768]       --                   True
+│    │    └─EncoderBlock (encoder_layer_0)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_1)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_2)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_3)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_4)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_5)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_6)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_7)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_8)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_9)                   [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_10)                  [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    │    └─EncoderBlock (encoder_layer_11)                  [32, 577, 768]       [32, 577, 768]       7,087,872            True
+│    └─LayerNorm (ln)                                        [32, 577, 768]       [32, 577, 768]       1,536                True
+├─Sequential (heads)                                         [32, 768]            [32, 1000]           --                   True
+│    └─Linear (head)                                         [32, 768]            [32, 1000]           769,000              True
+============================================================================================================================================
+Total params: 86,859,496
+Trainable params: 86,859,496
+Non-trainable params: 0
+Total mult-adds (Units.GIGABYTES): 12.73
+============================================================================================================================================
+Input size (MB): 56.62
+Forward/backward pass size (MB): 9756.14
+Params size (MB): 232.27
+Estimated Total Size (MB): 10045.03
+============================================================================================================================================
+
+── Updated ViT-B/16 with 3-class head ──
+============================================================================================================================================
+Layer (type (var_name))                                      Input Shape          Output Shape         Param #              Trainable
+============================================================================================================================================
+VisionTransformer (VisionTransformer)                        [32, 3, 384, 384]    [32, 3]              768                  Partial
+├─Conv2d (conv_proj)                                         [32, 3, 384, 384]    [32, 768, 24, 24]    (590,592)            False
+├─Encoder (encoder)                                          [32, 577, 768]       [32, 577, 768]       443,136              False
+│    └─Dropout (dropout)                                     [32, 577, 768]       [32, 577, 768]       --                   --
+│    └─Sequential (layers)                                   [32, 577, 768]       [32, 577, 768]       --                   False
+│    │    └─EncoderBlock (encoder_layer_0)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_1)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_2)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_3)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_4)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_5)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_6)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_7)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_8)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_9)                   [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_10)                  [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_11)                  [32, 577, 768]       [32, 577, 768]       (7,087,872)          False
+│    └─LayerNorm (ln)                                        [32, 577, 768]       [32, 577, 768]       (1,536)              False
+├─Sequential (heads)                                         [32, 768]            [32, 3]              --                   True
+│    └─Linear (head)                                         [32, 768]            [32, 3]              2,307                True
+============================================================================================================================================
+Total params: 86,092,803
+Trainable params: 2,307
+Non-trainable params: 86,090,496
+Total mult-adds (Units.GIGABYTES): 12.70
+============================================================================================================================================
+Input size (MB): 56.62
+Forward/backward pass size (MB): 9755.89
+Params size (MB): 229.20
+Estimated Total Size (MB): 10041.71
+============================================================================================================================================
+
+Total parameters  : 86,092,803
+Trainable params  : 2,307  (classifier head only)
+Frozen params     : 86,090,496  (pretrained backbone)
+
+TensorBoard logs → lessons/section10_pytorch_paper_replicating/runs/ViT_pretrained_doubled_data_IMAGENET1K_SWAG_E2E_V1_weight_2026-06-08_19-34-41
+
+Fine-tuning ViT-B/16 classifier for 10 epochs on cuda...
+  0%|          | 0/10 [00:00<?, ?it/s]Epoch 1/10
+Train loss: 0.59463 | Train accuracy: 74.38%
+ 10%|█         | 1/10 [00:04<00:37,  4.20s/it]
+Test loss: 0.04597, Test accuracy: 100.00%
+
+Epoch 0 metrics:
+Train loss: 0.59463, Train accuracy: 74.3750%
+Test loss: 0.04597, Test accuracy: 100.0000%
+Epoch 2/10
+Train loss: 0.11350 | Train accuracy: 96.25%
+ 20%|██        | 2/10 [00:08<00:32,  4.09s/it]
+Test loss: 0.01644, Test accuracy: 100.00%
+
+Epoch 1 metrics:
+Train loss: 0.11350, Train accuracy: 96.2500%
+Test loss: 0.01644, Test accuracy: 100.0000%
+Epoch 3/10
+Train loss: 0.09315 | Train accuracy: 96.88%
+ 30%|███       | 3/10 [00:12<00:28,  4.05s/it]
+Test loss: 0.01017, Test accuracy: 100.00%
+
+Epoch 2 metrics:
+Train loss: 0.09315, Train accuracy: 96.8750%
+Test loss: 0.01017, Test accuracy: 100.0000%
+Epoch 4/10
+Train loss: 0.09793 | Train accuracy: 96.88%
+ 40%|████      | 4/10 [00:16<00:24,  4.02s/it]
+Test loss: 0.00820, Test accuracy: 100.00%
+
+Epoch 3 metrics:
+Train loss: 0.09793, Train accuracy: 96.8750%
+Test loss: 0.00820, Test accuracy: 100.0000%
+Epoch 5/10
+Train loss: 0.06720 | Train accuracy: 98.33%
+ 50%|█████     | 5/10 [00:20<00:20,  4.03s/it]
+Test loss: 0.00757, Test accuracy: 100.00%
+
+Epoch 4 metrics:
+Train loss: 0.06720, Train accuracy: 98.3333%
+Test loss: 0.00757, Test accuracy: 100.0000%
+Epoch 6/10
+Train loss: 0.06207 | Train accuracy: 98.54%
+ 60%|██████    | 6/10 [00:24<00:16,  4.02s/it]
+Test loss: 0.00697, Test accuracy: 100.00%
+
+Epoch 5 metrics:
+Train loss: 0.06207, Train accuracy: 98.5417%
+Test loss: 0.00697, Test accuracy: 100.0000%
+Epoch 7/10
+Train loss: 0.04000 | Train accuracy: 98.96%
+ 70%|███████   | 7/10 [00:28<00:12,  4.04s/it]
+Test loss: 0.00635, Test accuracy: 100.00%
+
+Epoch 6 metrics:
+Train loss: 0.04000, Train accuracy: 98.9583%
+Test loss: 0.00635, Test accuracy: 100.0000%
+Epoch 8/10
+Train loss: 0.07553 | Train accuracy: 95.21%
+ 80%|████████  | 8/10 [00:32<00:08,  4.05s/it]
+Test loss: 0.00622, Test accuracy: 100.00%
+
+Epoch 7 metrics:
+Train loss: 0.07553, Train accuracy: 95.2083%
+Test loss: 0.00622, Test accuracy: 100.0000%
+Epoch 9/10
+Train loss: 0.04224 | Train accuracy: 98.75%
+ 90%|█████████ | 9/10 [00:36<00:04,  4.05s/it]
+Test loss: 0.00657, Test accuracy: 100.00%
+
+Epoch 8 metrics:
+Train loss: 0.04224, Train accuracy: 98.7500%
+Test loss: 0.00657, Test accuracy: 100.0000%
+Epoch 10/10
+Train loss: 0.05835 | Train accuracy: 98.33%
+100%|██████████| 10/10 [00:40<00:00,  4.05s/it]100%|██████████| 10/10 [00:40<00:00,  4.05s/it]
+/home/donghancheng85/gitrepo/hancheng_deep_learning_fun_repo/.venv/lib/python3.12/site-packages/torch/__init__.py:2228: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert condition, message
+
+Test loss: 0.00658, Test accuracy: 100.00%
+
+Epoch 9 metrics:
+Train loss: 0.05835, Train accuracy: 98.3333%
+Test loss: 0.00658, Test accuracy: 100.0000%
+[TensorBoard] Skipping add_graph — not compatible
+
+Training time: 40.56s (0.68 min | 4.06s/epoch)
+
+Model saved to: lessons/section10_pytorch_paper_replicating/models/vit_b16_pretrained_pizza_steak_sushi_data_doubled_IMAGENET1K_SWAG_E2E_V1_weight2026-06-08_19-35-21.pth

@@ -56,7 +56,7 @@ with torch.inference_mode():
     pred_label = CLASS_NAMES[pred_idx]
     pred_prob = probs[0, pred_idx].item()
 
-print(f"\n── Prediction ──────────────────────────────")
+print("\n── Prediction ──────────────────────────────")
 for i, (cls, p) in enumerate(zip(CLASS_NAMES, probs[0].tolist())):
     marker = " ◄" if i == pred_idx else ""
     print(f"  {cls:<8}: {p:.4f}{marker}")

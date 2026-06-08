@@ -1,5 +1,6 @@
 import torch
 import torchvision
+from torchvision.transforms import v2
 from pathlib import Path
 from torch import nn
 from torchinfo import summary
@@ -15,7 +16,7 @@ device = get_best_device()
 print_device_info(device)
 
 # ── Hyperparameters ───────────────────────────────────────────────────────────────────
-IMAGE_SIZE = 224
+IMAGE_SIZE = 384
 BATCH_SIZE = 32
 NUM_CLASSES = 3  # pizza / steak / sushi
 EPOCHS = 10
@@ -29,8 +30,10 @@ train_dir = data_path / "train"
 test_dir = data_path / "test"
 
 # ── 1. Load pretrained ViT-B/16 from torchvision ─────────────────────────────────────
-# ViT_B_16_Weights.IMAGENET1K_V1 — pretrained on ImageNet-1k (1000 classes)
-weights = torchvision.models.ViT_B_16_Weights.IMAGENET1K_V1
+# ViT_B_16_Weights.IMAGENET1K_SWAG_E2E_V1 — pretrained on ImageNet-1k (1000 classes)
+# with SWAG (Stochastic Weight Averaging-Gaussian) fine-tuning on ImageNet-1k
+# image size 384x384
+weights = torchvision.models.ViT_B_16_Weights.IMAGENET1K_SWAG_E2E_V1
 model = torchvision.models.vit_b_16(weights=weights)
 
 # Use the transform defined by the weights — guaranteed to match what the model
@@ -40,11 +43,25 @@ model = torchvision.models.vit_b_16(weights=weights)
 pretrained_transform = weights.transforms()
 print(f"\nPretrained transform: {pretrained_transform}")
 
+# Augmentation goes BEFORE pretrained_transform so colour ops (brightness,
+# contrast, sharpness etc. in TrivialAugmentWide) run on the original uint8
+# image, not on normalized floats where the value range is meaningless.
+# Spatial ops like RandomHorizontalFlip would work either way, but keeping
+# everything before normalization is consistent and correct.
+train_transform = v2.Compose(
+    [
+        v2.RandomHorizontalFlip(p=0.5),
+        v2.TrivialAugmentWide(),
+        pretrained_transform,  # Resize → CenterCrop → ToFloat → Normalize
+    ]
+)
+test_transform = pretrained_transform  # no augmentation at test time
+
 train_dataloader, test_dataloader, class_names = data_setup.create_dataloaders(
     train_dir=str(train_dir),
     test_dir=str(test_dir),
-    train_transform=pretrained_transform,
-    test_transform=pretrained_transform,
+    train_transform=train_transform,
+    test_transform=test_transform,
     batch_size=BATCH_SIZE,
 )
 print(f"Class names: {class_names}")
@@ -107,7 +124,7 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
 # ── 3a. TensorBoard writer ────────────────────────────────────────────────────────────
 log_dir = (
     Path("lessons/section10_pytorch_paper_replicating/runs")
-    / f"ViT_pretrained_doubled_data_{time.strftime('%Y-%m-%d_%H-%M-%S')}"
+    / f"ViT_pretrained_doubled_data_IMAGENET1K_SWAG_E2E_V1_weight_{time.strftime('%Y-%m-%d_%H-%M-%S')}"
 )
 writer = SummaryWriter(log_dir=str(log_dir))
 print(f"\nTensorBoard logs → {log_dir}")
@@ -144,7 +161,13 @@ save_dir = Path("lessons/section10_pytorch_paper_replicating/models")
 save_dir.mkdir(parents=True, exist_ok=True)
 save_path = (
     save_dir
-    / f"vit_b16_pretrained_pizza_steak_sushi_data_doubled_{time.strftime('%Y-%m-%d_%H-%M-%S')}.pth"
+    / f"vit_b16_pretrained_pizza_steak_sushi_data_doubled_IMAGENET1K_SWAG_E2E_V1_weight{time.strftime('%Y-%m-%d_%H-%M-%S')}.pth"
 )
 torch.save(model.state_dict(), save_path)
 print(f"\nModel saved to: {save_path}")
+
+"""
+The above weight IMAGENET1K_SWAG_E2E_V1 makes the test accuracy jump to 100% in the first epoch, 
+which is a sign of very good pretrained features for our task. The original IMAGENET1K_V1 checkpoint 
+also performed well, but the SWAG fine-tuned version seems to give an even bigger boost.
+"""

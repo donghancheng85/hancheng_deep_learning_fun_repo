@@ -1,6 +1,5 @@
 import torch
 import torchvision
-from torchvision.transforms import v2
 from pathlib import Path
 from torch import nn
 from torchinfo import summary
