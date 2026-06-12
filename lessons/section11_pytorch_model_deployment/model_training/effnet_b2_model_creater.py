@@ -10,16 +10,7 @@ from going_modular.pytorch_project import data_setup, engine
 from common.device import get_best_device, print_device_info
 from common.helper_fucntion import accuracy_fn, set_seeds, plot_loss_curves
 
-# ── Device ────────────────────────────────────────────────────────────────────────────
-device = get_best_device()
-print_device_info(device)
 
-# ── Data ──────────────────────────────────────────────────────────────────────────────
-data_path = Path(
-    "lessons/section6_pytorch_custom_datasets/data/pizza_steak_sushi_increased"
-)
-train_dir = data_path / "train"
-test_dir = data_path / "test"
 
 
 def create_effnet_b2_model(
