@@ -1,0 +1,176 @@
+Using CUDA: NVIDIA GeForce RTX 5080
+
+Original head: Linear(in_features=1408, out_features=1000, bias=True)
+Modified head: Linear(in_features=1408, out_features=3, bias=True)
+
+Pretrained transform: ImageClassification(
+    crop_size=[288]
+    resize_size=[288]
+    mean=[0.485, 0.456, 0.406]
+    std=[0.229, 0.224, 0.225]
+    interpolation=InterpolationMode.BICUBIC
+)
+Class names: ['pizza', 'steak', 'sushi']
+Train batches: 15 | Test batches: 5
+
+── EfficientNet-B2 with 3-class head ──
+============================================================================================================================================
+Layer (type (var_name))                                      Input Shape          Output Shape         Param #              Trainable
+============================================================================================================================================
+EfficientNet (EfficientNet)                                  [32, 3, 288, 288]    [32, 3]              --                   Partial
+├─Sequential (features)                                      [32, 3, 288, 288]    [32, 1408, 9, 9]     --                   False
+│    └─Conv2dNormActivation (0)                              [32, 3, 288, 288]    [32, 32, 144, 144]   --                   False
+│    │    └─Conv2d (0)                                       [32, 3, 288, 288]    [32, 32, 144, 144]   (864)                False
+│    │    └─BatchNorm2d (1)                                  [32, 32, 144, 144]   [32, 32, 144, 144]   (64)                 False
+│    │    └─SiLU (2)                                         [32, 32, 144, 144]   [32, 32, 144, 144]   --                   --
+│    └─Sequential (1)                                        [32, 32, 144, 144]   [32, 16, 144, 144]   --                   False
+│    │    └─MBConv (0)                                       [32, 32, 144, 144]   [32, 16, 144, 144]   (1,448)              False
+│    │    └─MBConv (1)                                       [32, 16, 144, 144]   [32, 16, 144, 144]   (612)                False
+│    └─Sequential (2)                                        [32, 16, 144, 144]   [32, 24, 72, 72]     --                   False
+│    │    └─MBConv (0)                                       [32, 16, 144, 144]   [32, 24, 72, 72]     (6,004)              False
+│    │    └─MBConv (1)                                       [32, 24, 72, 72]     [32, 24, 72, 72]     (10,710)             False
+│    │    └─MBConv (2)                                       [32, 24, 72, 72]     [32, 24, 72, 72]     (10,710)             False
+│    └─Sequential (3)                                        [32, 24, 72, 72]     [32, 48, 36, 36]     --                   False
+│    │    └─MBConv (0)                                       [32, 24, 72, 72]     [32, 48, 36, 36]     (16,518)             False
+│    │    └─MBConv (1)                                       [32, 48, 36, 36]     [32, 48, 36, 36]     (43,308)             False
+│    │    └─MBConv (2)                                       [32, 48, 36, 36]     [32, 48, 36, 36]     (43,308)             False
+│    └─Sequential (4)                                        [32, 48, 36, 36]     [32, 88, 18, 18]     --                   False
+│    │    └─MBConv (0)                                       [32, 48, 36, 36]     [32, 88, 18, 18]     (50,300)             False
+│    │    └─MBConv (1)                                       [32, 88, 18, 18]     [32, 88, 18, 18]     (123,750)            False
+│    │    └─MBConv (2)                                       [32, 88, 18, 18]     [32, 88, 18, 18]     (123,750)            False
+│    │    └─MBConv (3)                                       [32, 88, 18, 18]     [32, 88, 18, 18]     (123,750)            False
+│    └─Sequential (5)                                        [32, 88, 18, 18]     [32, 120, 18, 18]    --                   False
+│    │    └─MBConv (0)                                       [32, 88, 18, 18]     [32, 120, 18, 18]    (149,158)            False
+│    │    └─MBConv (1)                                       [32, 120, 18, 18]    [32, 120, 18, 18]    (237,870)            False
+│    │    └─MBConv (2)                                       [32, 120, 18, 18]    [32, 120, 18, 18]    (237,870)            False
+│    │    └─MBConv (3)                                       [32, 120, 18, 18]    [32, 120, 18, 18]    (237,870)            False
+│    └─Sequential (6)                                        [32, 120, 18, 18]    [32, 208, 9, 9]      --                   False
+│    │    └─MBConv (0)                                       [32, 120, 18, 18]    [32, 208, 9, 9]      (301,406)            False
+│    │    └─MBConv (1)                                       [32, 208, 9, 9]      [32, 208, 9, 9]      (686,868)            False
+│    │    └─MBConv (2)                                       [32, 208, 9, 9]      [32, 208, 9, 9]      (686,868)            False
+│    │    └─MBConv (3)                                       [32, 208, 9, 9]      [32, 208, 9, 9]      (686,868)            False
+│    │    └─MBConv (4)                                       [32, 208, 9, 9]      [32, 208, 9, 9]      (686,868)            False
+│    └─Sequential (7)                                        [32, 208, 9, 9]      [32, 352, 9, 9]      --                   False
+│    │    └─MBConv (0)                                       [32, 208, 9, 9]      [32, 352, 9, 9]      (846,900)            False
+│    │    └─MBConv (1)                                       [32, 352, 9, 9]      [32, 352, 9, 9]      (1,888,920)          False
+│    └─Conv2dNormActivation (8)                              [32, 352, 9, 9]      [32, 1408, 9, 9]     --                   False
+│    │    └─Conv2d (0)                                       [32, 352, 9, 9]      [32, 1408, 9, 9]     (495,616)            False
+│    │    └─BatchNorm2d (1)                                  [32, 1408, 9, 9]     [32, 1408, 9, 9]     (2,816)              False
+│    │    └─SiLU (2)                                         [32, 1408, 9, 9]     [32, 1408, 9, 9]     --                   --
+├─AdaptiveAvgPool2d (avgpool)                                [32, 1408, 9, 9]     [32, 1408, 1, 1]     --                   --
+├─Sequential (classifier)                                    [32, 1408]           [32, 3]              --                   True
+│    └─Dropout (0)                                           [32, 1408]           [32, 1408]           --                   --
+│    └─Linear (1)                                            [32, 1408]           [32, 3]              4,227                True
+============================================================================================================================================
+Total params: 7,705,221
+Trainable params: 4,227
+Non-trainable params: 7,700,994
+Total mult-adds (Units.GIGABYTES): 34.76
+============================================================================================================================================
+Input size (MB): 31.85
+Forward/backward pass size (MB): 8291.71
+Params size (MB): 30.82
+Estimated Total Size (MB): 8354.38
+============================================================================================================================================
+
+Total parameters  : 7,705,221
+Trainable params  : 4,227  (classifier head only)
+Frozen params     : 7,700,994  (pretrained backbone)
+
+TensorBoard logs → lessons/section11_pytorch_model_deployment/runs/effnet_b2/2026-06-14_11-26-14
+
+Fine-tuning EfficientNet-B2 classifier for 10 epochs on cuda...
+  0%|          | 0/10 [00:00<?, ?it/s]Epoch 1/10
+Train loss: 0.98432 | Train accuracy: 56.67%
+ 10%|█         | 1/10 [00:00<00:08,  1.06it/s]
+Test loss: 0.74098, Test accuracy: 93.47%
+
+Epoch 0 metrics:
+Train loss: 0.98432, Train accuracy: 56.6667%
+Test loss: 0.74098, Test accuracy: 93.4659%
+Epoch 2/10
+Train loss: 0.71875 | Train accuracy: 84.17%
+ 20%|██        | 2/10 [00:01<00:07,  1.09it/s]
+Test loss: 0.59135, Test accuracy: 94.09%
+
+Epoch 1 metrics:
+Train loss: 0.71875, Train accuracy: 84.1667%
+Test loss: 0.59135, Test accuracy: 94.0909%
+Epoch 3/10
+Train loss: 0.59426 | Train accuracy: 89.58%
+ 30%|███       | 3/10 [00:02<00:06,  1.11it/s]
+Test loss: 0.50099, Test accuracy: 95.62%
+
+Epoch 2 metrics:
+Train loss: 0.59426, Train accuracy: 89.5833%
+Test loss: 0.50099, Test accuracy: 95.6250%
+Epoch 4/10
+Train loss: 0.46311 | Train accuracy: 91.04%
+ 40%|████      | 4/10 [00:03<00:05,  1.12it/s]
+Test loss: 0.45390, Test accuracy: 94.09%
+
+Epoch 3 metrics:
+Train loss: 0.46311, Train accuracy: 91.0417%
+Test loss: 0.45390, Test accuracy: 94.0909%
+Epoch 5/10
+Train loss: 0.45269 | Train accuracy: 91.04%
+ 50%|█████     | 5/10 [00:04<00:04,  1.12it/s]
+Test loss: 0.42007, Test accuracy: 94.43%
+
+Epoch 4 metrics:
+Train loss: 0.45269, Train accuracy: 91.0417%
+Test loss: 0.42007, Test accuracy: 94.4318%
+Epoch 6/10
+Train loss: 0.46934 | Train accuracy: 88.96%
+ 60%|██████    | 6/10 [00:05<00:03,  1.12it/s]
+Test loss: 0.39745, Test accuracy: 95.97%
+
+Epoch 5 metrics:
+Train loss: 0.46934, Train accuracy: 88.9583%
+Test loss: 0.39745, Test accuracy: 95.9659%
+Epoch 7/10
+Train loss: 0.44832 | Train accuracy: 87.50%
+ 70%|███████   | 7/10 [00:06<00:02,  1.13it/s]
+Test loss: 0.37863, Test accuracy: 95.62%
+
+Epoch 6 metrics:
+Train loss: 0.44832, Train accuracy: 87.5000%
+Test loss: 0.37863, Test accuracy: 95.6250%
+Epoch 8/10
+Train loss: 0.43930 | Train accuracy: 89.79%
+ 80%|████████  | 8/10 [00:07<00:01,  1.13it/s]
+Test loss: 0.38513, Test accuracy: 96.59%
+
+Epoch 7 metrics:
+Train loss: 0.43930, Train accuracy: 89.7917%
+Test loss: 0.38513, Test accuracy: 96.5909%
+Epoch 9/10
+Train loss: 0.39235 | Train accuracy: 90.00%
+ 90%|█████████ | 9/10 [00:08<00:00,  1.13it/s]
+Test loss: 0.38362, Test accuracy: 93.18%
+
+Epoch 8 metrics:
+Train loss: 0.39235, Train accuracy: 90.0000%
+Test loss: 0.38362, Test accuracy: 93.1818%
+Epoch 10/10
+Train loss: 0.45228 | Train accuracy: 85.83%
+100%|██████████| 10/10 [00:08<00:00,  1.13it/s]100%|██████████| 10/10 [00:08<00:00,  1.12it/s]
+
+Test loss: 0.37436, Test accuracy: 94.43%
+
+Epoch 9 metrics:
+Train loss: 0.45228, Train accuracy: 85.8333%
+Test loss: 0.37436, Test accuracy: 94.4318%
+
+Training time: 9.68s (0.16 min | 0.97s/epoch)
+
+Model saved to: lessons/section11_pytorch_model_deployment/models/effnet_b2/effnet_b2_pizza_steak_sushi_2026-06-14_11-26-23.pth
+
+── Final Model Statistics ──
+  Train loss      : 0.45228
+  Train accuracy  : 85.83%
+  Test  loss      : 0.37436
+  Test  accuracy  : 94.43%
+  Total params    : 7,705,221
+  Trainable params: 4,227
+  Model size      : 29.85 MB

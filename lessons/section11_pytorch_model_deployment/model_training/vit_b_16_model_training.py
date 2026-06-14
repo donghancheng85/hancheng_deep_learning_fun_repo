@@ -5,8 +5,8 @@ from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
 import time
 
-from lessons.section11_pytorch_model_deployment.model_training.effnet_b2_model_creater import (
-    create_effnet_b2_model,
+from lessons.section11_pytorch_model_deployment.model_training.vit_b_16_model_creater import (
+    create_vit_b16_model,
 )
 
 from going_modular.pytorch_project import data_setup, engine
@@ -18,7 +18,7 @@ device = get_best_device()
 print_device_info(device)
 
 # ── Hyperparameters ───────────────────────────────────────────────────────────────────
-IMAGE_SIZE = 288  # EfficientNet-B2 native input size
+IMAGE_SIZE = 224  # ViT-B/16 native input size
 BATCH_SIZE = 32
 NUM_CLASSES = 3  # pizza / steak / sushi
 EPOCHS = 10
@@ -32,7 +32,7 @@ train_dir = data_path / "train"
 test_dir = data_path / "test"
 
 # ── Model ─────────────────────────────────────────────────────────────────────────────
-model, pretrained_transform = create_effnet_b2_model(num_classes=NUM_CLASSES, seed=42)
+model, pretrained_transform = create_vit_b16_model(num_classes=NUM_CLASSES, seed=42)
 print(f"\nPretrained transform: {pretrained_transform}")
 
 train_dataloader, test_dataloader, class_names = data_setup.create_dataloaders(
@@ -47,7 +47,7 @@ print(f"Class names: {class_names}")
 print(f"Train batches: {len(train_dataloader)} | Test batches: {len(test_dataloader)}")
 
 # ── Model structure ───────────────────────────────────────────────────────────────────
-print("\n── EfficientNet-B2 with 3-class head ──")
+print("\n── ViT-B/16 with 3-class head ──")
 summary(
     model=model,
     input_size=(BATCH_SIZE, 3, IMAGE_SIZE, IMAGE_SIZE),
@@ -80,14 +80,14 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
 
 # ── TensorBoard writer ────────────────────────────────────────────────────────────────
 log_dir = Path(
-    "lessons/section11_pytorch_model_deployment/runs/effnet_b2"
+    "lessons/section11_pytorch_model_deployment/runs/vit_b16"
 ) / time.strftime("%Y-%m-%d_%H-%M-%S")
 writer = SummaryWriter(log_dir=str(log_dir))
 print(f"\nTensorBoard logs → {log_dir}")
 
 # ── Train ─────────────────────────────────────────────────────────────────────────────
 set_seeds()
-print(f"\nFine-tuning EfficientNet-B2 classifier for {EPOCHS} epochs on {device}...")
+print(f"\nFine-tuning ViT-B/16 classifier for {EPOCHS} epochs on {device}...")
 train_start = time.perf_counter()
 
 results = engine.train_for_summarywriter(
@@ -110,11 +110,14 @@ print(
     f"({total_seconds / 60:.2f} min | {total_seconds / EPOCHS:.2f}s/epoch)"
 )
 
+# ── Plot ──────────────────────────────────────────────────────────────────────────────
+plot_loss_curves(results)
+
 # ── Save model ────────────────────────────────────────────────────────────────────────
-save_dir = Path("lessons/section11_pytorch_model_deployment/models/effnet_b2")
+save_dir = Path("lessons/section11_pytorch_model_deployment/models/vit_b16")
 save_dir.mkdir(parents=True, exist_ok=True)
 save_path = (
-    save_dir / f"effnet_b2_pizza_steak_sushi_{time.strftime('%Y-%m-%d_%H-%M-%S')}.pth"
+    save_dir / f"vit_b16_pizza_steak_sushi_{time.strftime('%Y-%m-%d_%H-%M-%S')}.pth"
 )
 torch.save(model.state_dict(), save_path)
 print(f"\nModel saved to: {save_path}")

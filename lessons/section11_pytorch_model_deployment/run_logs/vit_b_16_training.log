@@ -1,0 +1,154 @@
+Using CUDA: NVIDIA GeForce RTX 5080
+
+Original head: Linear(in_features=768, out_features=1000, bias=True)
+Modified head: Linear(in_features=768, out_features=3, bias=True)
+
+Pretrained transform: ImageClassification(
+    crop_size=[224]
+    resize_size=[256]
+    mean=[0.485, 0.456, 0.406]
+    std=[0.229, 0.224, 0.225]
+    interpolation=InterpolationMode.BILINEAR
+)
+Class names: ['pizza', 'steak', 'sushi']
+Train batches: 15 | Test batches: 5
+
+── ViT-B/16 with 3-class head ──
+============================================================================================================================================
+Layer (type (var_name))                                      Input Shape          Output Shape         Param #              Trainable
+============================================================================================================================================
+VisionTransformer (VisionTransformer)                        [32, 3, 224, 224]    [32, 3]              768                  Partial
+├─Conv2d (conv_proj)                                         [32, 3, 224, 224]    [32, 768, 14, 14]    (590,592)            False
+├─Encoder (encoder)                                          [32, 197, 768]       [32, 197, 768]       151,296              False
+│    └─Dropout (dropout)                                     [32, 197, 768]       [32, 197, 768]       --                   --
+│    └─Sequential (layers)                                   [32, 197, 768]       [32, 197, 768]       --                   False
+│    │    └─EncoderBlock (encoder_layer_0)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_1)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_2)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_3)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_4)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_5)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_6)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_7)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_8)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_9)                   [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_10)                  [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    │    └─EncoderBlock (encoder_layer_11)                  [32, 197, 768]       [32, 197, 768]       (7,087,872)          False
+│    └─LayerNorm (ln)                                        [32, 197, 768]       [32, 197, 768]       (1,536)              False
+├─Sequential (heads)                                         [32, 768]            [32, 3]              --                   True
+│    └─Linear (head)                                         [32, 768]            [32, 3]              2,307                True
+============================================================================================================================================
+Total params: 85,800,963
+Trainable params: 2,307
+Non-trainable params: 85,798,656
+Total mult-adds (Units.GIGABYTES): 5.52
+============================================================================================================================================
+Input size (MB): 19.27
+Forward/backward pass size (MB): 3330.74
+Params size (MB): 229.20
+Estimated Total Size (MB): 3579.21
+============================================================================================================================================
+
+Total parameters  : 85,800,963
+Trainable params  : 2,307  (classifier head only)
+Frozen params     : 85,798,656  (pretrained backbone)
+
+TensorBoard logs → lessons/section11_pytorch_model_deployment/runs/vit_b16/2026-06-14_12-03-29
+
+Fine-tuning ViT-B/16 classifier for 10 epochs on cuda...
+  0%|          | 0/10 [00:00<?, ?it/s]Epoch 1/10
+Train loss: 0.70200 | Train accuracy: 75.21%
+ 10%|█         | 1/10 [00:01<00:12,  1.43s/it]
+Test loss: 0.27139, Test accuracy: 93.81%
+
+Epoch 0 metrics:
+Train loss: 0.70200, Train accuracy: 75.2083%
+Test loss: 0.27139, Test accuracy: 93.8068%
+Epoch 2/10
+Train loss: 0.25411 | Train accuracy: 90.62%
+ 20%|██        | 2/10 [00:02<00:11,  1.40s/it]
+Test loss: 0.16884, Test accuracy: 96.02%
+
+Epoch 1 metrics:
+Train loss: 0.25411, Train accuracy: 90.6250%
+Test loss: 0.16884, Test accuracy: 96.0227%
+Epoch 3/10
+Train loss: 0.17912 | Train accuracy: 95.42%
+ 30%|███       | 3/10 [00:04<00:09,  1.38s/it]
+Test loss: 0.13122, Test accuracy: 96.93%
+
+Epoch 2 metrics:
+Train loss: 0.17912, Train accuracy: 95.4167%
+Test loss: 0.13122, Test accuracy: 96.9318%
+Epoch 4/10
+Train loss: 0.13206 | Train accuracy: 96.25%
+ 40%|████      | 4/10 [00:05<00:08,  1.36s/it]
+Test loss: 0.11301, Test accuracy: 97.22%
+
+Epoch 3 metrics:
+Train loss: 0.13206, Train accuracy: 96.2500%
+Test loss: 0.11301, Test accuracy: 97.2159%
+Epoch 5/10
+Train loss: 0.12354 | Train accuracy: 96.25%
+ 50%|█████     | 5/10 [00:06<00:06,  1.36s/it]
+Test loss: 0.10349, Test accuracy: 97.84%
+
+Epoch 4 metrics:
+Train loss: 0.12354, Train accuracy: 96.2500%
+Test loss: 0.10349, Test accuracy: 97.8409%
+Epoch 6/10
+Train loss: 0.14208 | Train accuracy: 93.54%
+ 60%|██████    | 6/10 [00:08<00:05,  1.35s/it]
+Test loss: 0.09478, Test accuracy: 97.22%
+
+Epoch 5 metrics:
+Train loss: 0.14208, Train accuracy: 93.5417%
+Test loss: 0.09478, Test accuracy: 97.2159%
+Epoch 7/10
+Train loss: 0.10193 | Train accuracy: 96.88%
+ 70%|███████   | 7/10 [00:09<00:04,  1.35s/it]
+Test loss: 0.09295, Test accuracy: 97.84%
+
+Epoch 6 metrics:
+Train loss: 0.10193, Train accuracy: 96.8750%
+Test loss: 0.09295, Test accuracy: 97.8409%
+Epoch 8/10
+Train loss: 0.12812 | Train accuracy: 93.96%
+ 80%|████████  | 8/10 [00:10<00:02,  1.35s/it]
+Test loss: 0.09053, Test accuracy: 97.84%
+
+Epoch 7 metrics:
+Train loss: 0.12812, Train accuracy: 93.9583%
+Test loss: 0.09053, Test accuracy: 97.8409%
+Epoch 9/10
+Train loss: 0.10931 | Train accuracy: 97.50%
+ 90%|█████████ | 9/10 [00:12<00:01,  1.35s/it]
+Test loss: 0.08930, Test accuracy: 97.22%
+
+Epoch 8 metrics:
+Train loss: 0.10931, Train accuracy: 97.5000%
+Test loss: 0.08930, Test accuracy: 97.2159%
+Epoch 10/10
+Train loss: 0.10218 | Train accuracy: 97.71%
+100%|██████████| 10/10 [00:13<00:00,  1.35s/it]100%|██████████| 10/10 [00:13<00:00,  1.36s/it]
+/home/donghancheng85/gitrepo/hancheng_deep_learning_fun_repo/.venv/lib/python3.12/site-packages/torch/__init__.py:2228: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert condition, message
+
+Test loss: 0.08899, Test accuracy: 97.22%
+
+Epoch 9 metrics:
+Train loss: 0.10218, Train accuracy: 97.7083%
+Test loss: 0.08899, Test accuracy: 97.2159%
+
+Training time: 13.96s (0.23 min | 1.40s/epoch)
+
+Model saved to: lessons/section11_pytorch_model_deployment/models/vit_b16/vit_b16_pizza_steak_sushi_2026-06-14_12-03-43.pth
+
+── Final Model Statistics ──
+  Train loss      : 0.10218
+  Train accuracy  : 97.71%
+  Test  loss      : 0.08899
+  Test  accuracy  : 97.22%
+  Total params    : 85,800,963
+  Trainable params: 2,307
+  Model size      : 327.37 MB

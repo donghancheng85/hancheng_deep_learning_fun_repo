@@ -11,8 +11,6 @@ from common.device import get_best_device, print_device_info
 from common.helper_fucntion import accuracy_fn, set_seeds, plot_loss_curves
 
 
-
-
 def create_effnet_b2_model(
     num_classes: int = 3, seed: int = 42
 ) -> tuple[nn.Module, nn.Module]:
