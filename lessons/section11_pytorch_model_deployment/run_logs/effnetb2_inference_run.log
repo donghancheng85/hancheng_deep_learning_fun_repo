@@ -1,0 +1,26 @@
+Using CUDA: NVIDIA GeForce RTX 5080
+Class names: ['pizza', 'steak', 'sushi']
+
+[INFO] Loading model from: lessons/section11_pytorch_model_deployment/models/effnet_b2/effnet_b2_pizza_steak_sushi_2026-06-14_11-26-23.pth
+
+Original head: Linear(in_features=1408, out_features=1000, bias=True)
+Modified head: Linear(in_features=1408, out_features=3, bias=True)
+[INFO] Model loaded successfully.
+
+[INFO] Found 150 test images in: lessons/section6_pytorch_custom_datasets/data/pizza_steak_sushi_increased/test
+Running inference on images:   0%|          | 0/150 [00:00<?, ?it/s]Running inference on images:   1%|          | 1/150 [00:00<00:19,  7.82it/s]Running inference on images:  17%|█▋        | 25/150 [00:00<00:00, 130.29it/s]Running inference on images:  33%|███▎      | 50/150 [00:00<00:00, 180.55it/s]Running inference on images:  50%|█████     | 75/150 [00:00<00:00, 205.29it/s]Running inference on images:  67%|██████▋   | 100/150 [00:00<00:00, 219.58it/s]Running inference on images:  83%|████████▎ | 125/150 [00:00<00:00, 227.83it/s]Running inference on images: 100%|██████████| 150/150 [00:00<00:00, 234.42it/s]Running inference on images: 100%|██████████| 150/150 [00:00<00:00, 203.69it/s]
+
+── Prediction Summary ──
+  Total images : 150
+  Accuracy     : 94.67%
+  Avg time/img : 4.90 ms
+  FPS          : 204.1  (sequential, single-image)
+ground_truth pred_class  count
+       pizza      pizza     45
+       pizza      steak      1
+       steak      steak     56
+       steak      sushi      2
+       sushi      steak      5
+       sushi      sushi     41
+
+[INFO] Results saved to: lessons/section11_pytorch_model_deployment/results/effnet_b2_predictions.csv
