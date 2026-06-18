@@ -1,0 +1,50 @@
+============================================================
+1. OVERALL SUMMARY
+============================================================
+                 Accuracy (%)  Avg latency (ms)  FPS (sequential)  Model size (MB)
+Model                                                                             
+EfficientNet-B2         94.67              4.90             204.1            29.85
+ViT-B/16                97.33              5.91             169.1           327.37
+
+============================================================
+2. PER-CLASS METRICS
+============================================================
+
+── EfficientNet-B2 ──
+              precision    recall  f1-score   support
+
+       pizza       1.00      0.98      0.99        46
+       steak       0.90      0.97      0.93        58
+       sushi       0.95      0.89      0.92        46
+
+    accuracy                           0.95       150
+   macro avg       0.95      0.95      0.95       150
+weighted avg       0.95      0.95      0.95       150
+
+
+── ViT-B/16 ──
+              precision    recall  f1-score   support
+
+       pizza       0.98      1.00      0.99        46
+       steak       0.98      0.97      0.97        58
+       sushi       0.96      0.96      0.96        46
+
+    accuracy                           0.97       150
+   macro avg       0.97      0.97      0.97       150
+weighted avg       0.97      0.97      0.97       150
+
+
+[INFO] Confusion matrix plot saved → results/confusion_matrices.png
+[INFO] Calibration diagram saved → results/calibration_diagram.png
+[INFO] Confidence distribution saved → results/confidence_distribution.png
+
+============================================================
+6. DISAGREEMENT ANALYSIS
+============================================================
+Images where models disagree : 6 / 150
+  EfficientNet-B2 correct, ViT wrong : 1
+  ViT-B/16 correct, EfficientNet wrong: 5
+  Both wrong                          : 0
+[INFO] Speed-vs-accuracy plot saved → results/speed_vs_accuracy.png
+
+[DONE] All comparisons complete.

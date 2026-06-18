@@ -1,0 +1,26 @@
+Using CUDA: NVIDIA GeForce RTX 5080
+Class names: ['pizza', 'steak', 'sushi']
+
+[INFO] Loading model from: lessons/section11_pytorch_model_deployment/models/vit_b16/vit_b16_pizza_steak_sushi_2026-06-14_12-03-43.pth
+
+Original head: Linear(in_features=768, out_features=1000, bias=True)
+Modified head: Linear(in_features=768, out_features=3, bias=True)
+[INFO] Model loaded successfully.
+
+[INFO] Found 150 test images in: lessons/section6_pytorch_custom_datasets/data/pizza_steak_sushi_increased/test
+Running inference on images:   0%|          | 0/150 [00:00<?, ?it/s]Running inference on images:   1%|          | 1/150 [00:00<00:16,  8.88it/s]Running inference on images:  13%|█▎        | 20/150 [00:00<00:01, 110.02it/s]Running inference on images:  27%|██▋       | 40/150 [00:00<00:00, 147.29it/s]Running inference on images:  40%|████      | 60/150 [00:00<00:00, 165.79it/s]Running inference on images:  53%|█████▎    | 80/150 [00:00<00:00, 174.89it/s]Running inference on images:  67%|██████▋   | 100/150 [00:00<00:00, 180.88it/s]Running inference on images:  79%|███████▉  | 119/150 [00:00<00:00, 183.63it/s]Running inference on images:  93%|█████████▎| 139/150 [00:00<00:00, 186.57it/s]Running inference on images: 100%|██████████| 150/150 [00:00<00:00, 168.75it/s]
+
+── Prediction Summary ──
+  Total images : 150
+  Accuracy     : 97.33%
+  Avg time/img : 5.91 ms
+  FPS          : 169.1  (sequential, single-image)
+ground_truth pred_class  count
+       pizza      pizza     46
+       steak      steak     56
+       steak      sushi      2
+       sushi      pizza      1
+       sushi      steak      1
+       sushi      sushi     44
+
+[INFO] Results saved to: lessons/section11_pytorch_model_deployment/results/vit_b16_predictions.csv
