@@ -1,10 +1,10 @@
 ============================================================
 1. OVERALL SUMMARY
 ============================================================
-                 Accuracy (%)  Avg latency (ms)  FPS (sequential)  Model size (MB)
-Model                                                                             
-EfficientNet-B2         94.67              4.90             204.1            29.85
-ViT-B/16                97.33              5.91             169.1           327.37
+                 Accuracy (%)  Avg latency (ms)  FPS (sequential)  Model size (MB)  ECE (10 bins)
+Model                                                                                            
+EfficientNet-B2         94.67              4.90             204.1            29.85         0.2219
+ViT-B/16                97.33              5.91             169.1           327.37         0.0584
 
 ============================================================
 2. PER-CLASS METRICS
@@ -36,6 +36,12 @@ weighted avg       0.97      0.97      0.97       150
 
 [INFO] Confusion matrix plot saved → results/confusion_matrices.png
 [INFO] Calibration diagram saved → results/calibration_diagram.png
+
+============================================================
+4B. CALIBRATION ERROR (ECE)
+============================================================
+EfficientNet-B2  ECE (10 bins): 0.2219
+ViT-B/16         ECE (10 bins): 0.0584
 [INFO] Confidence distribution saved → results/confidence_distribution.png
 
 ============================================================

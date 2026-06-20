@@ -23,6 +23,37 @@ from sklearn.metrics import (
     ConfusionMatrixDisplay,
 )
 
+
+def expected_calibration_error(
+    confidences: pd.Series, correct_flags: pd.Series, n_bins: int = 10
+) -> float:
+    """Compute Expected Calibration Error (ECE).
+
+    ECE = sum_k (n_k / N) * |acc_k - conf_k| across confidence bins.
+    Lower is better; 0 means perfectly calibrated confidence estimates.
+    """
+    bins = np.linspace(0.0, 1.0, n_bins + 1)
+    total = len(confidences)
+    if total == 0:
+        return 0.0
+
+    ece = 0.0
+    for i, (lo, hi) in enumerate(zip(bins[:-1], bins[1:])):
+        if i == n_bins - 1:
+            mask = (confidences >= lo) & (confidences <= hi)
+        else:
+            mask = (confidences >= lo) & (confidences < hi)
+
+        n_k = int(mask.sum())
+        if n_k == 0:
+            continue
+
+        acc_k = float(correct_flags[mask].mean())
+        conf_k = float(confidences[mask].mean())
+        ece += (n_k / total) * abs(acc_k - conf_k)
+
+    return float(ece)
+
 # ── Load results ──────────────────────────────────────────────────────────────────────
 results_dir = Path("lessons/section11_pytorch_model_deployment/results")
 df_eff = pd.read_csv(results_dir / "effnet_b2_predictions.csv")
@@ -54,6 +85,7 @@ for name, df in MODELS.items():
     avg_ms = df["time_s"].mean() * 1000
     fps = 1 / df["time_s"].mean()
     size_mb = MODEL_PATHS[name].stat().st_size / (1024 * 1024)
+    ece = expected_calibration_error(df["pred_prob"], df["correct"], n_bins=10)
     summary_rows.append(
         {
             "Model": name,
@@ -61,6 +93,7 @@ for name, df in MODELS.items():
             "Avg latency (ms)": round(avg_ms, 2),
             "FPS (sequential)": round(fps, 1),
             "Model size (MB)": round(size_mb, 2),
+            "ECE (10 bins)": round(ece, 4),
         }
     )
 
@@ -113,8 +146,11 @@ bins = np.linspace(0, 1, N_BINS + 1)
 
 for ax, (name, df) in zip(axes, MODELS.items()):
     bin_accs, bin_confs, bin_counts = [], [], []
-    for lo, hi in zip(bins[:-1], bins[1:]):
-        mask = (df["pred_prob"] >= lo) & (df["pred_prob"] < hi)
+    for i, (lo, hi) in enumerate(zip(bins[:-1], bins[1:])):
+        if i == N_BINS - 1:
+            mask = (df["pred_prob"] >= lo) & (df["pred_prob"] <= hi)
+        else:
+            mask = (df["pred_prob"] >= lo) & (df["pred_prob"] < hi)
         if mask.sum() == 0:
             continue
         bin_accs.append(float(df["correct"][mask].mean()))
@@ -141,6 +177,13 @@ plt.tight_layout()
 plt.savefig(results_dir / "calibration_diagram.png", dpi=150)
 print("[INFO] Calibration diagram saved → results/calibration_diagram.png")
 plt.show()
+
+print("\n" + "=" * 60)
+print("4B. CALIBRATION ERROR (ECE)")
+print("=" * 60)
+for name, df in MODELS.items():
+    ece = expected_calibration_error(df["pred_prob"], df["correct"], n_bins=N_BINS)
+    print(f"{name:16s} ECE ({N_BINS} bins): {ece:.4f}")
 
 # ─────────────────────────────────────────────────────────────────────────────────────
 # 5. CONFIDENCE DISTRIBUTION  (histogram per model)
