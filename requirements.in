@@ -30,3 +30,6 @@ torchviz
 torchinfo
 tensorboard
 mlxtend
+
+# Web demo / deployment
+gradio
