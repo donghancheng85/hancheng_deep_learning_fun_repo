@@ -54,6 +54,7 @@ def expected_calibration_error(
 
     return float(ece)
 
+
 # ── Load results ──────────────────────────────────────────────────────────────────────
 results_dir = Path("lessons/section11_pytorch_model_deployment/results")
 df_eff = pd.read_csv(results_dir / "effnet_b2_predictions.csv")
