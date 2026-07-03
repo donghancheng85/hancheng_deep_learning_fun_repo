@@ -166,9 +166,10 @@ def train(
             device=device,
         )
 
-        print(f"Epoch {epoch} metrics:")
+        print(f"Epoch {epoch + 1} metrics:")
         print(f"Train loss: {train_loss:.5f}, Train accuracy: {train_accuracy:.4f}%")
         print(f"Test loss: {test_loss:.5f}, Test accuracy: {test_accuracy:.4f}%")
+        print("--------------------------------\n")
 
         # Step the scheduler if provided
         if scheduler is not None:
@@ -250,9 +251,10 @@ def train_for_summarywriter(
             device=device,
         )
 
-        print(f"Epoch {epoch} metrics:")
+        print(f"Epoch {epoch + 1} metrics:")
         print(f"Train loss: {train_loss:.5f}, Train accuracy: {train_accuracy:.4f}%")
         print(f"Test loss: {test_loss:.5f}, Test accuracy: {test_accuracy:.4f}%")
+        print("--------------------------------\n")
 
         # Step the scheduler if provided
         if scheduler is not None:
