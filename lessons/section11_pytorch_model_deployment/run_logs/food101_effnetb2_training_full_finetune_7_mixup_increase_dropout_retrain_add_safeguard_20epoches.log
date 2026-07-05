@@ -1,0 +1,291 @@
+Using CUDA: NVIDIA GeForce RTX 5080
+
+Original head: Linear(in_features=1408, out_features=1000, bias=True)
+Modified head: Linear(in_features=1408, out_features=101, bias=True)
+
+Train transform:
+Compose(
+      RandomResizedCrop(size=(288, 288), scale=(0.75, 1.0), ratio=(0.75, 1.3333333333333333), interpolation=InterpolationMode.BILINEAR, antialias=True)
+      RandomHorizontalFlip(p=0.5)
+      ColorJitter(brightness=(0.8, 1.2), contrast=(0.8, 1.2), saturation=(0.8, 1.2), hue=(-0.05, 0.05))
+      RandomRotation(degrees=[-15.0, 15.0], interpolation=InterpolationMode.NEAREST, expand=False, fill=0)
+      ToImage()
+      ToDtype(scale=True)
+      Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
+)
+
+Test transform:
+Compose(
+      Resize(size=[304], interpolation=InterpolationMode.BILINEAR, antialias=True)
+      CenterCrop(size=(288, 288))
+      ToImage()
+      ToDtype(scale=True)
+      Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
+)
+
+Classes: 101 | e.g. ['apple_pie', 'baby_back_ribs', 'baklava', 'beef_carpaccio', 'beef_tartare'] … ['tiramisu', 'tuna_tartare', 'waffles']
+Train batches : 2,368  (75,750 images)
+Test  batches : 790  (25,250 images)
+
+── EfficientNet-B2 — 101-class head ──
+============================================================================================================================================
+Layer (type (var_name))                                      Input Shape          Output Shape         Param #              Trainable
+============================================================================================================================================
+EfficientNet (EfficientNet)                                  [1, 3, 288, 288]     [1, 101]             --                   Partial
+├─Sequential (features)                                      [1, 3, 288, 288]     [1, 1408, 9, 9]      --                   False
+│    └─Conv2dNormActivation (0)                              [1, 3, 288, 288]     [1, 32, 144, 144]    --                   False
+│    │    └─Conv2d (0)                                       [1, 3, 288, 288]     [1, 32, 144, 144]    (864)                False
+│    │    └─BatchNorm2d (1)                                  [1, 32, 144, 144]    [1, 32, 144, 144]    (64)                 False
+│    │    └─SiLU (2)                                         [1, 32, 144, 144]    [1, 32, 144, 144]    --                   --
+│    └─Sequential (1)                                        [1, 32, 144, 144]    [1, 16, 144, 144]    --                   False
+│    │    └─MBConv (0)                                       [1, 32, 144, 144]    [1, 16, 144, 144]    (1,448)              False
+│    │    └─MBConv (1)                                       [1, 16, 144, 144]    [1, 16, 144, 144]    (612)                False
+│    └─Sequential (2)                                        [1, 16, 144, 144]    [1, 24, 72, 72]      --                   False
+│    │    └─MBConv (0)                                       [1, 16, 144, 144]    [1, 24, 72, 72]      (6,004)              False
+│    │    └─MBConv (1)                                       [1, 24, 72, 72]      [1, 24, 72, 72]      (10,710)             False
+│    │    └─MBConv (2)                                       [1, 24, 72, 72]      [1, 24, 72, 72]      (10,710)             False
+│    └─Sequential (3)                                        [1, 24, 72, 72]      [1, 48, 36, 36]      --                   False
+│    │    └─MBConv (0)                                       [1, 24, 72, 72]      [1, 48, 36, 36]      (16,518)             False
+│    │    └─MBConv (1)                                       [1, 48, 36, 36]      [1, 48, 36, 36]      (43,308)             False
+│    │    └─MBConv (2)                                       [1, 48, 36, 36]      [1, 48, 36, 36]      (43,308)             False
+│    └─Sequential (4)                                        [1, 48, 36, 36]      [1, 88, 18, 18]      --                   False
+│    │    └─MBConv (0)                                       [1, 48, 36, 36]      [1, 88, 18, 18]      (50,300)             False
+│    │    └─MBConv (1)                                       [1, 88, 18, 18]      [1, 88, 18, 18]      (123,750)            False
+│    │    └─MBConv (2)                                       [1, 88, 18, 18]      [1, 88, 18, 18]      (123,750)            False
+│    │    └─MBConv (3)                                       [1, 88, 18, 18]      [1, 88, 18, 18]      (123,750)            False
+│    └─Sequential (5)                                        [1, 88, 18, 18]      [1, 120, 18, 18]     --                   False
+│    │    └─MBConv (0)                                       [1, 88, 18, 18]      [1, 120, 18, 18]     (149,158)            False
+│    │    └─MBConv (1)                                       [1, 120, 18, 18]     [1, 120, 18, 18]     (237,870)            False
+│    │    └─MBConv (2)                                       [1, 120, 18, 18]     [1, 120, 18, 18]     (237,870)            False
+│    │    └─MBConv (3)                                       [1, 120, 18, 18]     [1, 120, 18, 18]     (237,870)            False
+│    └─Sequential (6)                                        [1, 120, 18, 18]     [1, 208, 9, 9]       --                   False
+│    │    └─MBConv (0)                                       [1, 120, 18, 18]     [1, 208, 9, 9]       (301,406)            False
+│    │    └─MBConv (1)                                       [1, 208, 9, 9]       [1, 208, 9, 9]       (686,868)            False
+│    │    └─MBConv (2)                                       [1, 208, 9, 9]       [1, 208, 9, 9]       (686,868)            False
+│    │    └─MBConv (3)                                       [1, 208, 9, 9]       [1, 208, 9, 9]       (686,868)            False
+│    │    └─MBConv (4)                                       [1, 208, 9, 9]       [1, 208, 9, 9]       (686,868)            False
+│    └─Sequential (7)                                        [1, 208, 9, 9]       [1, 352, 9, 9]       --                   False
+│    │    └─MBConv (0)                                       [1, 208, 9, 9]       [1, 352, 9, 9]       (846,900)            False
+│    │    └─MBConv (1)                                       [1, 352, 9, 9]       [1, 352, 9, 9]       (1,888,920)          False
+│    └─Conv2dNormActivation (8)                              [1, 352, 9, 9]       [1, 1408, 9, 9]      --                   False
+│    │    └─Conv2d (0)                                       [1, 352, 9, 9]       [1, 1408, 9, 9]      (495,616)            False
+│    │    └─BatchNorm2d (1)                                  [1, 1408, 9, 9]      [1, 1408, 9, 9]      (2,816)              False
+│    │    └─SiLU (2)                                         [1, 1408, 9, 9]      [1, 1408, 9, 9]      --                   --
+├─AdaptiveAvgPool2d (avgpool)                                [1, 1408, 9, 9]      [1, 1408, 1, 1]      --                   --
+├─Sequential (classifier)                                    [1, 1408]            [1, 101]             --                   True
+│    └─Dropout (0)                                           [1, 1408]            [1, 1408]            --                   --
+│    └─Linear (1)                                            [1, 1408]            [1, 101]             142,309              True
+============================================================================================================================================
+Total params: 7,843,303
+Trainable params: 142,309
+Non-trainable params: 7,700,994
+Total mult-adds (Units.GIGABYTES): 1.09
+============================================================================================================================================
+Input size (MB): 1.00
+Forward/backward pass size (MB): 259.12
+Params size (MB): 31.37
+Estimated Total Size (MB): 291.49
+============================================================================================================================================
+
+Total parameters  : 7,843,303
+All params trainable after backbone unfreeze: 7,843,303
+Trainable params  : 7,843,303  (full model — backbone + head)
+Classifier dropout set to 0.4
+
+TensorBoard logs → lessons/section11_pytorch_model_deployment/runs/food101_effnetb2_mixup_20ep/2026-07-04_19-04-53
+
+Fine-tuning EfficientNet-B2 on Food-101 for 20 epochs on cuda…
+Epochs:   0%|          | 0/20 [00:00<?, ?it/s]Epoch 1/20
+                                              Epochs:   0%|          | 0/20 [03:03<?, ?it/s]Train loss: 2.64290 | Train accuracy: 55.07%
+                                              Epochs:   0%|          | 0/20 [03:33<?, ?it/s]Epochs:   5%|▌         | 1/20 [03:33<1:07:30, 213.21s/it]
+Test loss: 1.44972, Test accuracy: 81.65%
+
+Epoch 1 metrics:
+Train loss: 2.64290, Train accuracy: 55.0702%
+Test loss: 1.44972, Test accuracy: 81.6535%
+--------------------------------
+Epoch 2/20
+                                                         Epochs:   5%|▌         | 1/20 [06:36<1:07:30, 213.21s/it]Train loss: 2.22024 | Train accuracy: 68.45%
+                                                         Epochs:   5%|▌         | 1/20 [07:07<1:07:30, 213.21s/it]Epochs:  10%|█         | 2/20 [07:07<1:04:06, 213.71s/it]
+Test loss: 1.41094, Test accuracy: 83.82%
+
+Epoch 2 metrics:
+Train loss: 2.22024, Train accuracy: 68.4452%
+Test loss: 1.41094, Test accuracy: 83.8172%
+--------------------------------
+Epoch 3/20
+                                                         Epochs:  10%|█         | 2/20 [10:13<1:04:06, 213.71s/it]Train loss: 2.06631 | Train accuracy: 73.06%
+                                                         Epochs:  10%|█         | 2/20 [10:43<1:04:06, 213.71s/it]Epochs:  15%|█▌        | 3/20 [10:43<1:00:55, 215.03s/it]
+Test loss: 1.32688, Test accuracy: 85.45%
+
+Epoch 3 metrics:
+Train loss: 2.06631, Train accuracy: 73.0574%
+Test loss: 1.32688, Test accuracy: 85.4509%
+--------------------------------
+Epoch 4/20
+                                                         Epochs:  15%|█▌        | 3/20 [13:49<1:00:55, 215.03s/it]Train loss: 2.00240 | Train accuracy: 75.54%
+                                                         Epochs:  15%|█▌        | 3/20 [14:20<1:00:55, 215.03s/it]Epochs:  20%|██        | 4/20 [14:20<57:28, 215.54s/it]  
+Test loss: 1.26922, Test accuracy: 86.52%
+
+Epoch 4 metrics:
+Train loss: 2.00240, Train accuracy: 75.5428%
+Test loss: 1.26922, Test accuracy: 86.5229%
+--------------------------------
+Epoch 5/20
+                                                       Epochs:  20%|██        | 4/20 [17:25<57:28, 215.54s/it]Train loss: 1.92196 | Train accuracy: 77.80%
+                                                       Epochs:  20%|██        | 4/20 [17:55<57:28, 215.54s/it]Epochs:  25%|██▌       | 5/20 [17:55<53:53, 215.57s/it]
+Test loss: 1.30513, Test accuracy: 87.17%
+
+Epoch 5 metrics:
+Train loss: 1.92196, Train accuracy: 77.8004%
+Test loss: 1.30513, Test accuracy: 87.1717%
+--------------------------------
+Epoch 6/20
+                                                       Epochs:  25%|██▌       | 5/20 [21:03<53:53, 215.57s/it]Train loss: 1.86169 | Train accuracy: 80.08%
+                                                       Epochs:  25%|██▌       | 5/20 [21:34<53:53, 215.57s/it]Epochs:  30%|███       | 6/20 [21:34<50:30, 216.46s/it]
+Test loss: 1.29354, Test accuracy: 87.12%
+
+Epoch 6 metrics:
+Train loss: 1.86169, Train accuracy: 80.0777%
+Test loss: 1.29354, Test accuracy: 87.1163%
+--------------------------------
+Epoch 7/20
+                                                       Epochs:  30%|███       | 6/20 [24:41<50:30, 216.46s/it]Train loss: 1.80852 | Train accuracy: 81.59%
+                                                       Epochs:  30%|███       | 6/20 [25:11<50:30, 216.46s/it]Epochs:  35%|███▌      | 7/20 [25:11<46:58, 216.79s/it]
+Test loss: 1.25849, Test accuracy: 87.59%
+
+Epoch 7 metrics:
+Train loss: 1.80852, Train accuracy: 81.5852%
+Test loss: 1.25849, Test accuracy: 87.5910%
+--------------------------------
+Epoch 8/20
+                                                       Epochs:  35%|███▌      | 7/20 [28:17<46:58, 216.79s/it]Train loss: 1.79934 | Train accuracy: 82.65%
+                                                       Epochs:  35%|███▌      | 7/20 [28:48<46:58, 216.79s/it]Epochs:  40%|████      | 8/20 [28:48<43:20, 216.71s/it]
+Test loss: 1.24717, Test accuracy: 87.91%
+
+Epoch 8 metrics:
+Train loss: 1.79934, Train accuracy: 82.6462%
+Test loss: 1.24717, Test accuracy: 87.9074%
+--------------------------------
+Epoch 9/20
+                                                       Epochs:  40%|████      | 8/20 [31:53<43:20, 216.71s/it]Train loss: 1.73560 | Train accuracy: 84.39%
+                                                       Epochs:  40%|████      | 8/20 [32:24<43:20, 216.71s/it]Epochs:  45%|████▌     | 9/20 [32:24<39:44, 216.74s/it]
+Test loss: 1.24680, Test accuracy: 88.05%
+
+Epoch 9 metrics:
+Train loss: 1.73560, Train accuracy: 84.3904%
+Test loss: 1.24680, Test accuracy: 88.0459%
+--------------------------------
+Epoch 10/20
+                                                       Epochs:  45%|████▌     | 9/20 [35:32<39:44, 216.74s/it]Train loss: 1.72840 | Train accuracy: 84.86%
+                                                       Epochs:  45%|████▌     | 9/20 [36:03<39:44, 216.74s/it]Epochs:  50%|█████     | 10/20 [36:03<36:12, 217.28s/it]
+Test loss: 1.23048, Test accuracy: 88.40%
+
+Epoch 10 metrics:
+Train loss: 1.72840, Train accuracy: 84.8633%
+Test loss: 1.23048, Test accuracy: 88.3979%
+--------------------------------
+Epoch 11/20
+                                                        Epochs:  50%|█████     | 10/20 [39:09<36:12, 217.28s/it]Train loss: 1.67640 | Train accuracy: 86.53%
+                                                        Epochs:  50%|█████     | 10/20 [39:40<36:12, 217.28s/it]Epochs:  55%|█████▌    | 11/20 [39:40<32:35, 217.26s/it]
+Test loss: 1.19637, Test accuracy: 88.72%
+
+Epoch 11 metrics:
+Train loss: 1.67640, Train accuracy: 86.5309%
+Test loss: 1.19637, Test accuracy: 88.7184%
+--------------------------------
+Epoch 12/20
+                                                        Epochs:  55%|█████▌    | 11/20 [42:45<32:35, 217.26s/it]Train loss: 1.63825 | Train accuracy: 87.70%
+                                                        Epochs:  55%|█████▌    | 11/20 [43:16<32:35, 217.26s/it]Epochs:  60%|██████    | 12/20 [43:16<28:55, 216.90s/it]
+Test loss: 1.20354, Test accuracy: 88.91%
+
+Epoch 12 metrics:
+Train loss: 1.63825, Train accuracy: 87.7010%
+Test loss: 1.20354, Test accuracy: 88.9082%
+--------------------------------
+Epoch 13/20
+                                                        Epochs:  60%|██████    | 12/20 [46:23<28:55, 216.90s/it]Train loss: 1.62617 | Train accuracy: 88.04%
+                                                        Epochs:  60%|██████    | 12/20 [46:54<28:55, 216.90s/it]Epochs:  65%|██████▌   | 13/20 [46:54<25:19, 217.11s/it]
+Test loss: 1.23829, Test accuracy: 88.94%
+
+Epoch 13 metrics:
+Train loss: 1.62617, Train accuracy: 88.0411%
+Test loss: 1.23829, Test accuracy: 88.9359%
+--------------------------------
+Epoch 14/20
+                                                        Epochs:  65%|██████▌   | 13/20 [49:58<25:19, 217.11s/it]Train loss: 1.60466 | Train accuracy: 88.68%
+                                                        Epochs:  65%|██████▌   | 13/20 [50:29<25:19, 217.11s/it]Epochs:  70%|███████   | 14/20 [50:29<21:39, 216.64s/it]
+Test loss: 1.18623, Test accuracy: 89.10%
+
+Epoch 14 metrics:
+Train loss: 1.60466, Train accuracy: 88.6833%
+Test loss: 1.18623, Test accuracy: 89.1021%
+--------------------------------
+Epoch 15/20
+                                                        Epochs:  70%|███████   | 14/20 [53:36<21:39, 216.64s/it]Train loss: 1.59593 | Train accuracy: 88.96%
+                                                        Epochs:  70%|███████   | 14/20 [54:07<21:39, 216.64s/it]Epochs:  75%|███████▌  | 15/20 [54:07<18:04, 216.94s/it]
+Test loss: 1.17123, Test accuracy: 89.20%
+
+Epoch 15 metrics:
+Train loss: 1.59593, Train accuracy: 88.9609%
+Test loss: 1.17123, Test accuracy: 89.2049%
+--------------------------------
+Epoch 16/20
+                                                        Epochs:  75%|███████▌  | 15/20 [57:13<18:04, 216.94s/it]Train loss: 1.58363 | Train accuracy: 89.34%
+                                                        Epochs:  75%|███████▌  | 15/20 [57:45<18:04, 216.94s/it]Epochs:  80%|████████  | 16/20 [57:45<14:28, 217.15s/it]
+Test loss: 1.20681, Test accuracy: 89.22%
+
+Epoch 16 metrics:
+Train loss: 1.58363, Train accuracy: 89.3352%
+Test loss: 1.20681, Test accuracy: 89.2168%
+--------------------------------
+Epoch 17/20
+                                                        Epochs:  80%|████████  | 16/20 [1:00:52<14:28, 217.15s/it]Train loss: 1.53566 | Train accuracy: 90.07%
+                                                          Epochs:  80%|████████  | 16/20 [1:01:23<14:28, 217.15s/it]Epochs:  85%|████████▌ | 17/20 [1:01:23<10:52, 217.50s/it]
+Test loss: 1.17537, Test accuracy: 89.52%
+
+Epoch 17 metrics:
+Train loss: 1.53566, Train accuracy: 90.0659%
+Test loss: 1.17537, Test accuracy: 89.5214%
+--------------------------------
+Epoch 18/20
+                                                          Epochs:  85%|████████▌ | 17/20 [1:04:28<10:52, 217.50s/it]Train loss: 1.53416 | Train accuracy: 90.78%
+                                                          Epochs:  85%|████████▌ | 17/20 [1:04:58<10:52, 217.50s/it]Epochs:  90%|█████████ | 18/20 [1:04:58<07:13, 216.88s/it]
+Test loss: 1.16112, Test accuracy: 89.39%
+
+Epoch 18 metrics:
+Train loss: 1.53416, Train accuracy: 90.7790%
+Test loss: 1.16112, Test accuracy: 89.3948%
+--------------------------------
+Epoch 19/20
+                                                          Epochs:  90%|█████████ | 18/20 [1:08:05<07:13, 216.88s/it]Train loss: 1.57567 | Train accuracy: 90.02%
+                                                          Epochs:  90%|█████████ | 18/20 [1:08:35<07:13, 216.88s/it]Epochs:  95%|█████████▌| 19/20 [1:08:35<03:36, 216.90s/it]
+Test loss: 1.17136, Test accuracy: 89.46%
+
+Epoch 19 metrics:
+Train loss: 1.57567, Train accuracy: 90.0245%
+Test loss: 1.17136, Test accuracy: 89.4581%
+--------------------------------
+Epoch 20/20
+                                                          Epochs:  95%|█████████▌| 19/20 [1:11:43<03:36, 216.90s/it]Train loss: 1.56335 | Train accuracy: 90.31%
+                                                          Epochs:  95%|█████████▌| 19/20 [1:12:13<03:36, 216.90s/it]Epochs: 100%|██████████| 20/20 [1:12:13<00:00, 217.30s/it]Epochs: 100%|██████████| 20/20 [1:12:13<00:00, 216.70s/it]
+
+Test loss: 1.19261, Test accuracy: 89.38%
+
+Epoch 20 metrics:
+Train loss: 1.56335, Train accuracy: 90.3136%
+Test loss: 1.19261, Test accuracy: 89.3750%
+--------------------------------
+
+Training time: 4333.94s (72.23 min | 216.70s/epoch)
+
+Model saved → lessons/section11_pytorch_model_deployment/models/food101_effnetb2/effnet_b2_food101_mixup_20ep_2026-07-04_20-17-07.pth
+
+── Final Model Statistics ──
+  Train loss      : 1.56335
+  Train accuracy  : 90.31%
+  Test  loss      : 1.19261
+  Test  accuracy  : 89.38%
+  Total params    : 7,843,303
+  Trainable params: 7,843,303
+  Model size      : 30.38 MB
