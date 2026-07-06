@@ -98,10 +98,14 @@ EPOCHS = 20
 LEARNING_RATE = 1e-3
 WEIGHT_DECAY = 1e-4  # L2 regularisation via AdamW — decoupled from gradient update
 LABEL_SMOOTHING = 0.1  # ε — fraction of probability mass distributed to wrong classes
-MIXUP_ALPHA = 0.2  # MixUp interpolation strength; 0.2 is standard for image classification
-DROPOUT_P = 0.4   # classifier head dropout (default 0.3 → increased for extra regularisation)
+MIXUP_ALPHA = (
+    0.2  # MixUp interpolation strength; 0.2 is standard for image classification
+)
+DROPOUT_P = (
+    0.4  # classifier head dropout (default 0.3 → increased for extra regularisation)
+)
 NUM_WORKERS = 2  # restored: SafeFood101 tensor validation catches bad files regardless
-                  # of worker count; 0 disabled prefetching and tripled training time
+# of worker count; 0 disabled prefetching and tripled training time
 
 # ── Data paths ────────────────────────────────────────────────────────────────────────
 DATA_DIR = Path("lessons/section11_pytorch_model_deployment/data")
@@ -268,8 +272,16 @@ loss_fn = nn.CrossEntropyLoss(label_smoothing=LABEL_SMOOTHING)
 _effnet = cast(torchvision.models.EfficientNet, model)
 optimizer = torch.optim.AdamW(
     [
-        {"params": _effnet.features.parameters(), "lr": LEARNING_RATE / 10, "weight_decay": WEIGHT_DECAY},  # backbone
-        {"params": _effnet.classifier.parameters(), "lr": LEARNING_RATE, "weight_decay": WEIGHT_DECAY},  # head
+        {
+            "params": _effnet.features.parameters(),
+            "lr": LEARNING_RATE / 10,
+            "weight_decay": WEIGHT_DECAY,
+        },  # backbone
+        {
+            "params": _effnet.classifier.parameters(),
+            "lr": LEARNING_RATE,
+            "weight_decay": WEIGHT_DECAY,
+        },  # head
     ]
 )
 
@@ -301,7 +313,10 @@ print(f"\nFine-tuning EfficientNet-B2 on Food-101 for {EPOCHS} epochs on {device
 train_start = time.perf_counter()
 
 results: dict[str, list[float]] = {
-    "train_loss": [], "train_accuracy": [], "test_loss": [], "test_accuracy": []
+    "train_loss": [],
+    "train_accuracy": [],
+    "test_loss": [],
+    "test_accuracy": [],
 }
 
 for epoch in tqdm(range(EPOCHS), desc="Epochs"):
@@ -312,11 +327,11 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
     print(f"Epoch {epoch + 1}/{EPOCHS}", flush=True)
     for X, y in train_dataloader:
         X, y = X.to(device), y.to(device)
-        X_mix, y_soft = mixup_fn(X, y)   # y_soft: (B, 101) float soft labels
+        X_mix, y_soft = mixup_fn(X, y)  # y_soft: (B, 101) float soft labels
 
         optimizer.zero_grad()
         logits = model(X_mix)
-        loss = loss_fn(logits, y_soft)    # CE accepts float labels directly
+        loss = loss_fn(logits, y_soft)  # CE accepts float labels directly
         loss.backward()
         optimizer.step()
 
@@ -325,8 +340,10 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
         epoch_train_acc += accuracy_fn(y_soft.argmax(dim=1), logits.argmax(dim=1))
 
     epoch_train_loss /= len(train_dataloader)
-    epoch_train_acc  /= len(train_dataloader)
-    tqdm.write(f"Train loss: {epoch_train_loss:.5f} | Train accuracy: {epoch_train_acc:.2f}%")
+    epoch_train_acc /= len(train_dataloader)
+    tqdm.write(
+        f"Train loss: {epoch_train_loss:.5f} | Train accuracy: {epoch_train_acc:.2f}%"
+    )
 
     # ── Test step (no MixUp) ─────────────────────────────────────────────────────────
     epoch_test_loss, epoch_test_acc = engine.test_step(
@@ -360,7 +377,8 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
         f"Epoch {epoch + 1} metrics:\n"
         f"Train loss: {epoch_train_loss:.5f}, Train accuracy: {epoch_train_acc:.4f}%\n"
         f"Test loss: {epoch_test_loss:.5f}, Test accuracy: {epoch_test_acc:.4f}%\n"
-        + "-" * 32
+        + "-"
+        * 32
     )
 
 writer.close()
