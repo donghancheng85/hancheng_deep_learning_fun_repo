@@ -1,0 +1,74 @@
+[INFO] Loaded 25,250 predictions across 101 classes.
+
+============================================================
+1. OVERALL SUMMARY
+============================================================
+                          Test images  Accuracy (%)  Avg latency (ms)  FPS (sequential)  Model size (MB)  ECE (10 bins)
+Model                                                                                                                  
+EfficientNet-B2 Food-101        25250         89.23               4.3             232.8            30.38          0.221
+
+============================================================
+2. PER-CLASS METRICS (precision / recall / F1)
+============================================================
+
+Macro avg  — F1: 0.8919 | P: 0.8926 | R: 0.8923
+Weighted avg — F1: 0.8919
+
+── Top-10 classes by F1 ──
+                       precision  recall  f1-score  support
+edamame                 1.000000   1.000  1.000000      250
+macarons                0.964981   0.992  0.978304      250
+oysters                 0.971545   0.956  0.963710      250
+bibimbap                0.971429   0.952  0.961616      250
+spaghetti_bolognese     0.945736   0.976  0.960630      250
+cannoli                 0.967480   0.952  0.959677      250
+churros                 0.967480   0.952  0.959677      250
+spaghetti_carbonara     0.975207   0.944  0.959350      250
+lobster_roll_sandwich   0.956175   0.960  0.958084      250
+miso_soup               0.952381   0.960  0.956175      250
+
+── Bottom-10 classes by F1 ──
+                  precision  recall  f1-score  support
+steak              0.620408   0.608  0.614141      250
+chocolate_mousse   0.701961   0.716  0.708911      250
+filet_mignon       0.715867   0.776  0.744722      250
+pork_chop          0.835821   0.672  0.745011      250
+bread_pudding      0.771784   0.744  0.757637      250
+chocolate_cake     0.716783   0.820  0.764925      250
+foie_gras          0.772358   0.760  0.766129      250
+apple_pie          0.789916   0.752  0.770492      250
+cheesecake         0.817797   0.772  0.794239      250
+tuna_tartare       0.822034   0.776  0.798354      250
+
+============================================================
+3A. TOP-20 MISCLASSIFICATION PAIRS
+============================================================
+           ground_truth       pred_class  count
+                  steak     filet_mignon     38
+                  steak        prime_rib     30
+           filet_mignon            steak     30
+       chocolate_mousse   chocolate_cake     29
+         chocolate_cake chocolate_mousse     22
+              pork_chop            steak     19
+              apple_pie    bread_pudding     15
+              prime_rib            steak     15
+           tuna_tartare     beef_tartare     15
+              ice_cream    frozen_yogurt     14
+              pork_chop     filet_mignon     14
+           beef_tartare     tuna_tartare     13
+          bread_pudding        apple_pie     13
+                 donuts         beignets     12
+grilled_cheese_sandwich    club_sandwich     12
+         fried_calamari      onion_rings     12
+                ravioli          gnocchi     12
+              pork_chop   grilled_salmon     12
+       huevos_rancheros         omelette     12
+           clam_chowder   lobster_bisque     11
+
+[INFO] Per-class accuracy heatmap → results/food101_effnetb2/per_class_accuracy_heatmap.png
+[INFO] Calibration diagram saved | ECE = 0.2210
+[INFO] Confidence distribution saved.
+[INFO] F1 distribution saved.
+
+[DONE] All statistics complete.
+       Plots saved to: lessons/section11_pytorch_model_deployment/results/food101_effnetb2
