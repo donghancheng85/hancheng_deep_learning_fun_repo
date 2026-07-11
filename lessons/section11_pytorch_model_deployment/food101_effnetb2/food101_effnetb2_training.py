@@ -52,7 +52,9 @@ v6 — Extended training: 20 epochs, T_max=20  (2026-07-04)  ← CURRENT
   • EPOCHS 10 → 20; T_max 10 → 20 so LR decays more slowly over the longer run.
   • No overfitting risk (train < test confirmed in v5) — safe to extend.
   • Expected : ~89.5–90% test accuracy if the ~0.15%/epoch trend continues.
-  • Result    : TBD
+  • Result    : Train 90.31% | Test 89.38%  (best test 89.52% @ epoch 17)
+                Training time: 4333.94s (72.23 min | 216.70s/epoch)
+                Prediction confirmed: test acc matched the ~89.5–90% target.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 KEY DESIGN DECISIONS (current run — v6)

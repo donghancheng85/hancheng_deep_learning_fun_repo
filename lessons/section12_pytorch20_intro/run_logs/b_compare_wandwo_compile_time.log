@@ -1,0 +1,180 @@
+Using CUDA: NVIDIA GeForce RTX 5080
+
+Loading SVHN dataset ...
+Train batches: 1145 | Test batches: 407
+
+============================================================
+ResNet50 Model Summary
+============================================================
+============================================================================================================================================
+Layer (type:depth-idx)                   Input Shape               Output Shape              Param #                   Trainable
+============================================================================================================================================
+ResNet                                   [1, 3, 224, 224]          [1, 10]                   --                        True
+├─Conv2d: 1-1                            [1, 3, 224, 224]          [1, 64, 112, 112]         9,408                     True
+├─BatchNorm2d: 1-2                       [1, 64, 112, 112]         [1, 64, 112, 112]         128                       True
+├─ReLU: 1-3                              [1, 64, 112, 112]         [1, 64, 112, 112]         --                        --
+├─MaxPool2d: 1-4                         [1, 64, 112, 112]         [1, 64, 56, 56]           --                        --
+├─Sequential: 1-5                        [1, 64, 56, 56]           [1, 256, 56, 56]          --                        True
+│    └─Bottleneck: 2-1                   [1, 64, 56, 56]           [1, 256, 56, 56]          75,008                    True
+│    └─Bottleneck: 2-2                   [1, 256, 56, 56]          [1, 256, 56, 56]          70,400                    True
+│    └─Bottleneck: 2-3                   [1, 256, 56, 56]          [1, 256, 56, 56]          70,400                    True
+├─Sequential: 1-6                        [1, 256, 56, 56]          [1, 512, 28, 28]          --                        True
+│    └─Bottleneck: 2-4                   [1, 256, 56, 56]          [1, 512, 28, 28]          379,392                   True
+│    └─Bottleneck: 2-5                   [1, 512, 28, 28]          [1, 512, 28, 28]          280,064                   True
+│    └─Bottleneck: 2-6                   [1, 512, 28, 28]          [1, 512, 28, 28]          280,064                   True
+│    └─Bottleneck: 2-7                   [1, 512, 28, 28]          [1, 512, 28, 28]          280,064                   True
+├─Sequential: 1-7                        [1, 512, 28, 28]          [1, 1024, 14, 14]         --                        True
+│    └─Bottleneck: 2-8                   [1, 512, 28, 28]          [1, 1024, 14, 14]         1,512,448                 True
+│    └─Bottleneck: 2-9                   [1, 1024, 14, 14]         [1, 1024, 14, 14]         1,117,184                 True
+│    └─Bottleneck: 2-10                  [1, 1024, 14, 14]         [1, 1024, 14, 14]         1,117,184                 True
+│    └─Bottleneck: 2-11                  [1, 1024, 14, 14]         [1, 1024, 14, 14]         1,117,184                 True
+│    └─Bottleneck: 2-12                  [1, 1024, 14, 14]         [1, 1024, 14, 14]         1,117,184                 True
+│    └─Bottleneck: 2-13                  [1, 1024, 14, 14]         [1, 1024, 14, 14]         1,117,184                 True
+├─Sequential: 1-8                        [1, 1024, 14, 14]         [1, 2048, 7, 7]           --                        True
+│    └─Bottleneck: 2-14                  [1, 1024, 14, 14]         [1, 2048, 7, 7]           6,039,552                 True
+│    └─Bottleneck: 2-15                  [1, 2048, 7, 7]           [1, 2048, 7, 7]           4,462,592                 True
+│    └─Bottleneck: 2-16                  [1, 2048, 7, 7]           [1, 2048, 7, 7]           4,462,592                 True
+├─AdaptiveAvgPool2d: 1-9                 [1, 2048, 7, 7]           [1, 2048, 1, 1]           --                        --
+├─Linear: 1-10                           [1, 2048]                 [1, 10]                   20,490                    True
+============================================================================================================================================
+Total params: 23,528,522
+Trainable params: 23,528,522
+Non-trainable params: 0
+Total mult-adds (Units.GIGABYTES): 4.09
+============================================================================================================================================
+Input size (MB): 0.60
+Forward/backward pass size (MB): 177.82
+Params size (MB): 94.11
+Estimated Total Size (MB): 272.54
+============================================================================================================================================
+
+============================================================
+1 / 2  —  Baseline ResNet50  (no torch.compile)
+============================================================
+  0%|          | 0/5 [00:00<?, ?it/s]Epoch 1/5
+Train loss: 0.37775 | Train accuracy: 88.17%
+ 20%|██        | 1/5 [02:09<08:37, 129.34s/it]
+Test loss: 0.15414, Test accuracy: 95.88%
+
+Epoch 1 metrics:
+Train loss: 0.37775, Train accuracy: 88.1652%
+Test loss: 0.15414, Test accuracy: 95.8756%
+--------------------------------
+
+Epoch 2/5
+Train loss: 0.16092 | Train accuracy: 95.46%
+ 40%|████      | 2/5 [04:18<06:27, 129.06s/it]
+Test loss: 0.14875, Test accuracy: 95.95%
+
+Epoch 2 metrics:
+Train loss: 0.16092, Train accuracy: 95.4623%
+Test loss: 0.14875, Test accuracy: 95.9523%
+--------------------------------
+
+Epoch 3/5
+Train loss: 0.11288 | Train accuracy: 96.83%
+ 60%|██████    | 3/5 [06:27<04:17, 128.95s/it]
+Test loss: 0.14589, Test accuracy: 96.15%
+
+Epoch 3 metrics:
+Train loss: 0.11288, Train accuracy: 96.8278%
+Test loss: 0.14589, Test accuracy: 96.1469%
+--------------------------------
+
+Epoch 4/5
+Train loss: 0.08361 | Train accuracy: 97.51%
+ 80%|████████  | 4/5 [08:36<02:09, 129.17s/it]
+Test loss: 0.15775, Test accuracy: 96.04%
+
+Epoch 4 metrics:
+Train loss: 0.08361, Train accuracy: 97.5067%
+Test loss: 0.15775, Test accuracy: 96.0368%
+--------------------------------
+
+Epoch 5/5
+Train loss: 0.05906 | Train accuracy: 98.24%
+100%|██████████| 5/5 [10:46<00:00, 129.32s/it]100%|██████████| 5/5 [10:46<00:00, 129.22s/it]
+
+Test loss: 0.18686, Test accuracy: 95.21%
+
+Epoch 5 metrics:
+Train loss: 0.05906, Train accuracy: 98.2355%
+Test loss: 0.18686, Test accuracy: 95.2127%
+--------------------------------
+
+
+Baseline total time: 646.12s
+
+============================================================
+2 / 2  —  Compiled ResNet50  (torch.compile)
+============================================================
+Model moved to: cuda
+torch.compile() setup: 0.4624s  (JIT compilation is deferred to the first forward pass)
+  0%|          | 0/5 [00:00<?, ?it/s]Epoch 1/5
+/home/donghancheng85/gitrepo/hancheng_deep_learning_fun_repo/.venv/lib/python3.12/site-packages/torch/_inductor/compile_fx.py:321: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+Train loss: 0.38760 | Train accuracy: 87.85%
+ 20%|██        | 1/5 [02:25<09:43, 145.82s/it]
+Test loss: 0.16510, Test accuracy: 95.36%
+
+Epoch 1 metrics:
+Train loss: 0.38760, Train accuracy: 87.8504%
+Test loss: 0.16510, Test accuracy: 95.3598%
+--------------------------------
+
+Epoch 2/5
+Train loss: 0.16065 | Train accuracy: 95.50%
+ 40%|████      | 2/5 [04:16<06:15, 125.21s/it]
+Test loss: 0.15280, Test accuracy: 95.86%
+
+Epoch 2 metrics:
+Train loss: 0.16065, Train accuracy: 95.4952%
+Test loss: 0.15280, Test accuracy: 95.8564%
+--------------------------------
+
+Epoch 3/5
+Train loss: 0.11388 | Train accuracy: 96.81%
+ 60%|██████    | 3/5 [06:07<03:57, 118.59s/it]
+Test loss: 0.14074, Test accuracy: 96.29%
+
+Epoch 3 metrics:
+Train loss: 0.11388, Train accuracy: 96.8066%
+Test loss: 0.14074, Test accuracy: 96.2876%
+--------------------------------
+
+Epoch 4/5
+Train loss: 0.08356 | Train accuracy: 97.58%
+ 80%|████████  | 4/5 [07:58<01:55, 115.48s/it]
+Test loss: 0.17299, Test accuracy: 95.69%
+
+Epoch 4 metrics:
+Train loss: 0.08356, Train accuracy: 97.5819%
+Test loss: 0.17299, Test accuracy: 95.6887%
+--------------------------------
+
+Epoch 5/5
+Train loss: 0.06000 | Train accuracy: 98.17%
+100%|██████████| 5/5 [09:48<00:00, 113.76s/it]100%|██████████| 5/5 [09:48<00:00, 117.74s/it]
+
+Test loss: 0.15401, Test accuracy: 96.15%
+
+Epoch 5 metrics:
+Train loss: 0.06000, Train accuracy: 98.1691%
+Test loss: 0.15401, Test accuracy: 96.1533%
+--------------------------------
+
+
+Compiled total time: 588.72s  (includes 0.4624s torch.compile() setup)
+
+============================================================
+                         Comparison                         
+============================================================
+Metric                                Baseline   Compiled
+------------------------------------------------------------
+Total train+test time (s)               646.12     588.72
+Speedup (baseline / compiled)                —       1.10x
+Final train accuracy (%)                 98.24      98.17
+Final test accuracy  (%)                 95.21      96.15
+============================================================
+
+torch.compile is 1.10x FASTER over 5 epochs.
