@@ -48,7 +48,7 @@ v5 — MixUp augmentation + increased Dropout (2026-07-04)
                 Test acc still rising at epoch 10 — not fully converged.
                 LR hit near-zero too early (T_max=10 too short).
 
-v6 — Extended training: 20 epochs, T_max=20  (2026-07-04)  ← CURRENT
+v6 — Extended training: 20 epochs, T_max=20  (2026-07-04)
   • EPOCHS 10 → 20; T_max 10 → 20 so LR decays more slowly over the longer run.
   • No overfitting risk (train < test confirmed in v5) — safe to extend.
   • Expected : ~89.5–90% test accuracy if the ~0.15%/epoch trend continues.
@@ -56,8 +56,27 @@ v6 — Extended training: 20 epochs, T_max=20  (2026-07-04)  ← CURRENT
                 Training time: 4333.94s (72.23 min | 216.70s/epoch)
                 Prediction confirmed: test acc matched the ~89.5–90% target.
 
+v7 — GPU throughput optimisation: bigger batch + AMP + more workers (2026-07-13)  ← CURRENT
+  • BATCH_SIZE 32 → 64 (fewer optimizer steps/epoch; RTX 5080 16GB handles it easily)
+  • LEARNING_RATE 1e-3 → 2e-3 (linear scaling rule for 2× batch size)
+  • NUM_WORKERS 2 → 12 (32 CPU cores available; JPEG decode + augmentation is the
+    CPU-side bottleneck feeding the GPU)
+  • Added persistent_workers=True + prefetch_factor=4 to both DataLoaders
+    (avoids worker re-spawn cost each epoch; keeps 4 batches preloaded ahead of GPU)
+  • Added USE_AMP flag: bf16 autocast + torch.amp.GradScaler for the forward/backward
+    pass — RTX 50-series tensor cores accelerate matmuls/convs in bf16 with no
+    accuracy loss (bf16 has same exponent range as fp32, so no scaling instability)
+  • Result    : Train 91.62% | Test 89.47%  (accuracy on par with v6 — 89.38% → 89.47%)
+                Training time: 2935.26s (48.92 min | 146.76s/epoch)
+                Speedup: 32.3% faster per epoch (216.70s → 146.76s), 23.3 min saved
+  • Note      : GPU utilisation measured at 95–100% throughout training — confirms
+                the pipeline is now GPU-bound, not data-loading-bound. Further
+                speedup would require either a smaller/faster architecture or
+                pre-resizing the dataset to shrink JPEG decode cost (diminishing
+                returns from more workers/RAM once GPU-bound).
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-KEY DESIGN DECISIONS (current run — v6)
+KEY DESIGN DECISIONS (current run — v7)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   - Data augmentation: composed on top of the pretrained normalisation
     values so the backbone always sees correctly-normalised pixels.
@@ -94,10 +113,14 @@ print_device_info(device)
 
 # ── Hyperparameters ───────────────────────────────────────────────────────────────────
 IMAGE_SIZE = 288  # EfficientNet-B2 native input size
-BATCH_SIZE = 32
+BATCH_SIZE = 64  # was 32 — larger batch = fewer optimizer steps = faster epochs.
+#                  RTX 5080 (16 GB) handles this easily at 288px. If you hit
+#                  torch.cuda.OutOfMemoryError, drop to 48. Try 96/128 to push further.
 NUM_CLASSES = 101  # Food-101 has 101 categories
 EPOCHS = 20
-LEARNING_RATE = 1e-3
+# Linear LR scaling rule: doubling batch size → roughly double LR to keep
+# convergence speed. Batch 32→64 → LR 1e-3→2e-3. If accuracy drops, revert to 1e-3.
+LEARNING_RATE = 2e-3
 WEIGHT_DECAY = 1e-4  # L2 regularisation via AdamW — decoupled from gradient update
 LABEL_SMOOTHING = 0.1  # ε — fraction of probability mass distributed to wrong classes
 MIXUP_ALPHA = (
@@ -106,8 +129,12 @@ MIXUP_ALPHA = (
 DROPOUT_P = (
     0.4  # classifier head dropout (default 0.3 → increased for extra regularisation)
 )
-NUM_WORKERS = 2  # restored: SafeFood101 tensor validation catches bad files regardless
-# of worker count; 0 disabled prefetching and tripled training time
+NUM_WORKERS = 12  # was 8 — 32 CPU cores available; JPEG decode + augmentation is the
+#                   data-loading bottleneck. 12 leaves headroom for the main process.
+#                   64 GB RAM means the OS page-caches the whole 5 GB dataset after
+#                   epoch 1, so disk I/O is essentially free from then on.
+USE_AMP = True  # Automatic Mixed Precision — bf16 autocast for ~1.5-2× speedup on
+#                 RTX 50-series tensor cores, with no accuracy loss.
 
 # ── Data paths ────────────────────────────────────────────────────────────────────────
 DATA_DIR = Path("lessons/section11_pytorch_model_deployment/data")
@@ -216,6 +243,8 @@ class_names = train_dataset.base.classes
 print(f"\nClasses: {len(class_names)} | e.g. {class_names[:5]} … {class_names[-3:]}")
 
 # ── DataLoaders ───────────────────────────────────────────────────────────────────────
+# persistent_workers=True → keep workers alive between epochs (avoids re-spawn cost)
+# prefetch_factor=4        → each worker preloads 4 batches ahead so the GPU never waits
 train_dataloader = DataLoader(
     train_dataset,
     batch_size=BATCH_SIZE,
@@ -223,6 +252,8 @@ train_dataloader = DataLoader(
     num_workers=NUM_WORKERS,
     pin_memory=True,
     collate_fn=safe_collate,
+    persistent_workers=NUM_WORKERS > 0,
+    prefetch_factor=4 if NUM_WORKERS > 0 else None,
 )
 test_dataloader = DataLoader(
     test_dataset,
@@ -231,6 +262,8 @@ test_dataloader = DataLoader(
     num_workers=NUM_WORKERS,
     pin_memory=True,
     collate_fn=safe_collate,
+    persistent_workers=NUM_WORKERS > 0,
+    prefetch_factor=4 if NUM_WORKERS > 0 else None,
 )
 
 print(f"Train batches : {len(train_dataloader):,}  ({len(train_dataset):,} images)")
@@ -298,6 +331,12 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
 # v2.MixUp expects integer labels and returns float soft labels.
 mixup_fn = v2.MixUp(num_classes=NUM_CLASSES, alpha=MIXUP_ALPHA)
 
+# AMP GradScaler — only active on CUDA. bf16 autocast rarely needs the scaler, but
+# GradScaler is a safe no-op passthrough when enabled=False (e.g. non-CUDA device).
+amp_enabled = USE_AMP and device.type == "cuda"
+scaler = torch.amp.GradScaler("cuda", enabled=amp_enabled)
+print(f"\nAMP (mixed precision): {'ENABLED (bf16)' if amp_enabled else 'disabled'}")
+
 # ── TensorBoard writer ────────────────────────────────────────────────────────────────
 log_dir = Path(
     "lessons/section11_pytorch_model_deployment/runs/food101_effnetb2_mixup_20ep"
@@ -332,10 +371,15 @@ for epoch in tqdm(range(EPOCHS), desc="Epochs"):
         X_mix, y_soft = mixup_fn(X, y)  # y_soft: (B, 101) float soft labels
 
         optimizer.zero_grad()
-        logits = model(X_mix)
-        loss = loss_fn(logits, y_soft)  # CE accepts float labels directly
-        loss.backward()
-        optimizer.step()
+        # Autocast to bf16 for the forward pass — matmuls/convs run on tensor cores.
+        with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=amp_enabled):
+            logits = model(X_mix)
+            loss = loss_fn(logits, y_soft)  # CE accepts float labels directly
+
+        # GradScaler handles the backward/step (no-op scaling when AMP disabled).
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
 
         epoch_train_loss += loss.item()
         # Accuracy: dominant mixed class vs predicted class (approximate metric)
